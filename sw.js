@@ -1,14 +1,10 @@
-const CACHE_NAME = 'pokemon-battle-v1';
+const CACHE_NAME = 'pokemon-battle-v2';
 const urlsToCache = [
   './',
   './index.html',
   './icon-512.png',
   './manifest.json'
 ];
-
-// Pre-cache sprites on install
-const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
-const POKEMON_DEX = [6, 25, 150, 1, 4, 7, 94, 373, 642, 10006]; // Common dex nums used
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -31,20 +27,17 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response;
-
-      return fetch(event.request).then(fetchResponse => {
-        // Cache sprite images for offline use
-        if (event.request.url.includes('sprites') || event.request.url.includes('official-artwork')) {
-          const responseClone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return fetchResponse;
-      }).catch(() => {
-        // Offline fallback
+    fetch(event.request).then(fetchResponse => {
+      // Cache everything for offline use
+      const responseClone = fetchResponse.clone();
+      caches.open(CACHE_NAME).then(cache => {
+        cache.put(event.request, responseClone);
+      });
+      return fetchResponse;
+    }).catch(() => {
+      // Offline fallback: serve from cache
+      return caches.match(event.request).then(response => {
+        if (response) return response;
         if (event.request.destination === 'document') {
           return caches.match('./index.html');
         }

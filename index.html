@@ -698,6 +698,16 @@ let shakeIntensity = 0;
 let damageNumbers = [];
 let screenFlashes = []; // for Venusaur's Bloom Doom
 let keys = {};
+
+// Fisher-Yates shuffle for true randomness
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 let gameTime = 0;
 let cheatBuffer = '';
 
@@ -862,7 +872,14 @@ function buildMenu() {
         c.classList.remove('selected', 'selected-p2');
         c.querySelector('.badge').style.display = 'none';
       });
-      document.querySelectorAll('.name-input').forEach(inp => inp.value = '');
+      document.querySelectorAll('.name-input').forEach(inp => {
+        inp.value = localStorage.getItem('pokemon_p1_name') || '';
+      });
+      // Sync story input with p1 name
+      const storyInp = document.getElementById('story-name-input');
+      if (storyInp) storyInp.value = localStorage.getItem('pokemon_p1_name') || '';
+      const p2Inp = document.getElementById('p2-name-input');
+      if (p2Inp) p2Inp.value = localStorage.getItem('pokemon_p2_name') || '';
       document.getElementById('start-btn').disabled = true;
       const is2p = selectedMode === '2p';
       const isCoop = selectedMode === 'coop';
@@ -932,8 +949,13 @@ function buildMenu() {
 }
 
 function setupStoryNameButtons() {
-  document.getElementById('story-name-input').addEventListener('input', (e) => {
+  const storyInput = document.getElementById('story-name-input');
+  // Restore saved name (use P1 name as default for story)
+  const savedName = localStorage.getItem('pokemon_p1_name') || '';
+  if (savedName) { storyInput.value = savedName; p1Name = savedName; }
+  storyInput.addEventListener('input', (e) => {
     p1Name = e.target.value.trim();
+    localStorage.setItem('pokemon_p1_name', p1Name);
     updateStartBtnState();
   });
   document.querySelectorAll('#story-difficulty-select .diff-btn').forEach(btn => {
@@ -1091,16 +1113,25 @@ function render1PLeaderboard() {
 }
 
 function setupNameButtons() {
-  document.getElementById('p1-name-input').addEventListener('input', (e) => {
+  const p1Input = document.getElementById('p1-name-input');
+  const p2Input = document.getElementById('p2-name-input');
+  // Restore saved names
+  const savedP1 = localStorage.getItem('pokemon_p1_name') || '';
+  const savedP2 = localStorage.getItem('pokemon_p2_name') || '';
+  if (savedP1) { p1Input.value = savedP1; p1Name = savedP1; }
+  if (savedP2) { p2Input.value = savedP2; p2Name = savedP2; }
+  p1Input.addEventListener('input', (e) => {
     p1Name = e.target.value.trim();
+    localStorage.setItem('pokemon_p1_name', p1Name);
     updateStartBtnState();
     if (selectedPokemon) {
       const card = document.querySelector(`.pokemon-card[data-id="${selectedPokemon}"]`);
       if (card) card.querySelector('.badge').textContent = `${p1Name || 'P1'} ⭐`;
     }
   });
-  document.getElementById('p2-name-input').addEventListener('input', (e) => {
+  p2Input.addEventListener('input', (e) => {
     p2Name = e.target.value.trim();
+    localStorage.setItem('pokemon_p2_name', p2Name);
     updateStartBtnState();
     if (selectedPokemonP2) {
       const card = document.querySelector(`.pokemon-card[data-id="${selectedPokemonP2}"]`);
@@ -1262,7 +1293,7 @@ function startGame() {
       player2.hp = Math.round(player2.hp * 2);
       player2.maxHp = player2.hp;
     } else {
-      const enemyIds = allPokemonIds.filter(id => id !== selectedPokemon && id !== selectedPokemonP2).sort(() => Math.random() - 0.5);
+      const enemyIds = shuffleArray(allPokemonIds.filter(id => id !== selectedPokemon && id !== selectedPokemonP2));
       const enemyCount = Math.min(selectedOpponents, enemyIds.length);
       if (enemyCount >= 1) {
         const e1 = createFighter(enemyIds[0], ARENA_W / 2, 120, false);
@@ -1281,7 +1312,7 @@ function startGame() {
     player = createFighter(selectedPokemon, ARENA_W / 2, ARENA_H - 100, true);
     enemies = [];
     const diff = DIFFICULTY[selectedDifficulty];
-    const enemyIds = Object.keys(POKEMON_DATA).filter(id => id !== selectedPokemon).sort(() => Math.random() - 0.5);
+    const enemyIds = shuffleArray(Object.keys(POKEMON_DATA).filter(id => id !== selectedPokemon));
     const isChaos = selectedOpponents > 2;
 
     if (isChaos) {
@@ -1378,7 +1409,7 @@ function startStoryLevel() {
   const allPokemonIds = Object.keys(POKEMON_DATA).filter(id => id !== selectedPokemon);
 
   // Shuffle enemies
-  const shuffled = allPokemonIds.sort(() => Math.random() - 0.5);
+  const shuffled = shuffleArray(allPokemonIds);
 
   for (let i = 0; i < level.enemies; i++) {
     const pid = shuffled[i % shuffled.length];
