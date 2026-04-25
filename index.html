@@ -375,6 +375,7 @@
       <button class="diff-btn" data-mode="2p">👥 2P PvP</button>
       <button class="diff-btn" data-mode="coop">🤝 2P Co-op</button>
       <button class="diff-btn" data-mode="story">📜 Story Mode</button>
+      <button class="diff-btn" data-mode="training">🎯 Training</button>
     </div>
 
     <h2 id="select-label">Choose your fighter!</h2>
@@ -448,6 +449,14 @@
         <table id="story-leaderboard-table" style="width:100%;border-collapse:collapse;font-size:12px;color:#ccc">
           <tbody></tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="training-options" style="display:none">
+      <div style="margin-top:12px;padding:14px;border-radius:10px;background:rgba(0,0,0,0.3);border:1px solid #f39c12">
+        <h3 style="margin:0 0 8px;color:#f39c12">🎯 Training Arena</h3>
+        <p style="color:#aaa;font-size:13px;margin:0">Practice your moves against a training dummy that won't fight back.<br>Learn cooldowns, ranges, and combos!</p>
+        <div id="training-movelist" style="margin-top:12px;text-align:left;color:#ccc;font-size:13px"></div>
       </div>
     </div>
   </div>
@@ -884,16 +893,20 @@ function buildMenu() {
       const is2p = selectedMode === '2p';
       const isCoop = selectedMode === 'coop';
       const isStory = selectedMode === 'story';
+      const isTraining = selectedMode === 'training';
       const needsP2 = is2p || isCoop;
       // Toggle AI options visibility
-      document.getElementById('ai-options').style.display = (is2p || isStory) ? 'none' : '';
+      document.getElementById('ai-options').style.display = (is2p || isStory || isTraining) ? 'none' : '';
       document.getElementById('pvp-options').style.display = needsP2 ? 'block' : 'none';
       document.getElementById('story-options').style.display = isStory ? 'block' : 'none';
+      document.getElementById('training-options').style.display = isTraining ? 'block' : 'none';
       // Toggle controls info
       document.getElementById('controls-1p').style.display = needsP2 ? 'none' : '';
       document.getElementById('controls-2p').style.display = needsP2 ? '' : 'none';
       // Update label
-      if (isStory) {
+      if (isTraining) {
+        document.getElementById('select-label').textContent = 'Pick a Pokémon to practice with!';
+      } else if (isStory) {
         document.getElementById('select-label').textContent = 'Choose your fighter for Story Mode!';
       } else if (needsP2) {
         document.getElementById('select-label').textContent = 'P1: Click your fighter, then P2: Click yours!';
@@ -1147,6 +1160,10 @@ function updateStartBtnState() {
     document.getElementById('start-btn').disabled = !(selectedPokemon && p1Name);
   } else {
     document.getElementById('start-btn').disabled = !selectedPokemon;
+  }
+  // Update training movelist when pokemon is selected
+  if (selectedMode === 'training' && selectedPokemon) {
+    updateTrainingMoveList(selectedPokemon);
   }
 }
 
