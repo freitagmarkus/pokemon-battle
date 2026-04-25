@@ -13,7 +13,7 @@ self.addEventListener('install', event => {
       return cache.addAll(urlsToCache);
     })
   );
-  self.skipWaiting();
+  // Don't skipWaiting automatically — wait for user to approve update
 });
 
 self.addEventListener('activate', event => {
@@ -23,6 +23,13 @@ self.addEventListener('activate', event => {
     )
   );
   self.clients.claim();
+});
+
+// Listen for skip waiting message from the page
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', event => {

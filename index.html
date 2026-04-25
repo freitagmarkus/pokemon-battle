@@ -2905,11 +2905,60 @@ function gameLoop() {
 buildMenu();
 render1PLeaderboard();
 gameLoop();
-// Register service worker for PWA/offline support
+// Register service worker + auto-update detection
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(reg => {
     console.log('SW registered:', reg.scope);
+
+    // Check for updates on load and every 5 minutes
+    reg.update();
+    setInterval(() => reg.update(), 5 * 60 * 1000);
+
+    // Listen for new service worker available
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateToast();
+        }
+      });
+    });
   }).catch(err => console.log('SW error:', err));
+
+  // If SW takes control (after skipWaiting), reload
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
+function showUpdateToast() {
+  // Don't show if already visible
+  if (document.getElementById('update-toast')) return;
+  const toast = document.createElement('div');
+  toast.id = 'update-toast';
+  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#e94560,#c0392b);color:white;padding:14px 24px;border-radius:12px;font-family:sans-serif;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideUp 0.4s ease-out;';
+  toast.innerHTML = '🔄 New version available! <span style="text-decoration:underline">Tap to update</span>';
+  toast.addEventListener('click', () => {
+    toast.textContent = '⏳ Updating...';
+    navigator.serviceWorker.ready.then(reg => {
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
+    });
+  });
+  document.body.appendChild(toast);
+
+  // Add animation
+  const style = document.createElement('style');
+  style.textContent = '@keyframes slideUp { from { transform: translateX(-50%) translateY(100px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }';
+  document.head.appendChild(style);
 }
 </script>
 </body>
