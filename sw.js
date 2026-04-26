@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pokemon-battle-v5';
+const CACHE_NAME = 'pokemon-battle-v6';
 const urlsToCache = [
   './',
   './index.html',
