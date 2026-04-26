@@ -381,7 +381,7 @@
 <!-- MAIN MENU (outside overlay so it receives touch events on tablets) -->
 <div id="menu-screen" class="menu-screen">
     <h1>⚔️ Pokémon Battle Arena</h1>
-    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v8</div>
+    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v9</div>
 
     <h3>Mode</h3>
     <div class="difficulty-select" id="mode-select">
@@ -1053,7 +1053,7 @@ function setupStoryNameButtons() {
 
 function getStoryLeaderboard() {
   try { return JSON.parse(localStorage.getItem('pokemon_story_leaderboard') || '[]'); }
-  catch { return []; }
+  catch(e) { return []; }
 }
 function saveStoryLeaderboard(lb) {
   localStorage.setItem('pokemon_story_leaderboard', JSON.stringify(lb));
@@ -1072,7 +1072,8 @@ function renderStoryLeaderboard() {
     const sorted = [...lb].sort((a, b) => b.score - a.score).slice(0, 10);
     sorted.forEach((run, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
-      const pokeName = POKEMON_DATA[run.pokemon]?.name || run.pokemon;
+      const pokeData = POKEMON_DATA[run.pokemon];
+      const pokeName = (pokeData && pokeData.name) || run.pokemon;
       const timeStr = run.time ? formatTime(run.time) : '-';
       html += `<tr style="border-bottom:1px solid #222">
         <td style="padding:3px 6px">${medal}</td>
@@ -1112,7 +1113,7 @@ function updateOpponentLabels() {
 // ============================================================
 function getLeaderboard() {
   try { return JSON.parse(localStorage.getItem('pokemon_pvp_leaderboard') || '{}'); }
-  catch { return {}; }
+  catch(e) { return {}; }
 }
 function saveLeaderboard(lb) {
   localStorage.setItem('pokemon_pvp_leaderboard', JSON.stringify(lb));
@@ -1146,7 +1147,7 @@ function renderLeaderboard() {
     </tr>`;
   }
   // Total row
-  const total = names.reduce((sum, n) => sum + (lb[n]?.games || 0), 0) / 2; // each game counted for 2 players
+  const total = names.reduce((sum, n) => sum + ((lb[n] && lb[n].games) || 0), 0) / 2; // each game counted for 2 players
   html += `<tr style="border-top:2px solid #444"><td colspan="3"><strong>Total Games</strong></td><td colspan="3"><strong>${Math.round(total)}</strong></td></tr>`;
   html += '</tbody>';
   table.innerHTML = html;
@@ -1154,7 +1155,7 @@ function renderLeaderboard() {
 
 function get1PLeaderboard() {
   try { return JSON.parse(localStorage.getItem('pokemon_1p_leaderboard') || '{}'); }
-  catch { return {}; }
+  catch(e) { return {}; }
 }
 function save1PLeaderboard(lb) {
   localStorage.setItem('pokemon_1p_leaderboard', JSON.stringify(lb));
@@ -1176,7 +1177,7 @@ function render1PLeaderboard() {
     let bestDiff = '-';
     const diffOrder = ['hard', 'medium', 'easy', 'baby'];
     for (const diff of diffOrder) {
-      if (d.byDiff?.[diff]?.wins > 0) { bestDiff = diff; break; }
+      if (d.byDiff && d.byDiff[diff] && d.byDiff[diff].wins > 0) { bestDiff = diff; break; }
     }
     html += `<tr style="border-bottom:1px solid #222">
       <td style="padding:3px 8px"><strong>${data.name}</strong></td>
@@ -1621,7 +1622,7 @@ function updateStoryHUD() {
   const level = STORY_LEVELS[storyLevel - 1];
   const hearts = '❤️'.repeat(storyLives) + '🖤'.repeat(3 - storyLives);
   const elapsed = formatTime(Date.now() - storyStartTime);
-  storyHud.innerHTML = `<strong>📜 ${p1Name || 'Player'} — Level ${storyLevel}/${STORY_LEVELS.length}: ${level?.name || ''}</strong><br>${hearts} &nbsp;|&nbsp; Score: <strong>${storyScore}</strong> &nbsp;|&nbsp; ⏱ ${elapsed}<br><em style="color:#aaa;font-size:12px">${level?.desc || ''}</em>`;
+  storyHud.innerHTML = `<strong>📜 ${p1Name || 'Player'} — Level ${storyLevel}/${STORY_LEVELS.length}: ${(level && level.name) || ''}</strong><br>${hearts} &nbsp;|&nbsp; Score: <strong>${storyScore}</strong> &nbsp;|&nbsp; ⏱ ${elapsed}<br><em style="color:#aaa;font-size:12px">${(level && level.desc) || ''}</em>`;
   storyHud.style.display = storyActive ? '' : 'none';
 }
 
@@ -2461,7 +2462,8 @@ function getTypeMultiplier(attackerType, defenderType) {
     psychic:  { grass: 1.5, ghost: 0.7, psychic: 1, fire: 1, water: 1, electric: 1, fairy: 1 },
     fairy:    { ghost: 1.5, psychic: 1.5, fire: 0.7, water: 1, grass: 1, electric: 0.7, fairy: 1 },
   };
-  return chart[attackerType]?.[defenderType] ?? 1;
+  var typeChart = chart[attackerType];
+  return (typeChart && typeChart[defenderType] !== undefined) ? typeChart[defenderType] : 1;
 }
 
 // ============================================================
@@ -2476,9 +2478,9 @@ function handleProjectileCollisions() {
     for (const f of allFighters) {
       if (f === p.owner) continue;
       // Co-op: don't let players hit each other
-      if (selectedMode === 'coop' && p.owner?.isPlayer && f.isPlayer) continue;
+      if (selectedMode === 'coop' && p.owner && p.owner.isPlayer && f.isPlayer) continue;
       // No friendly fire: enemies don't hurt enemies, players don't hurt players
-      if (!p.owner?.isPlayer && !f.isPlayer) continue;
+      if (!(p.owner && p.owner.isPlayer) && !f.isPlayer) continue;
       if (p.hit.has(f)) continue;
       if (f.invincibleTimer > 0) continue;
 
