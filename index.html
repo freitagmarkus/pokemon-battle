@@ -492,6 +492,168 @@
   ">🔄 Restart</button>
 </div>
 
+<!-- TOUCH CONTROLS OVERLAY -->
+<div id="touch-controls" style="display:none;position:fixed;bottom:0;left:0;right:0;top:0;z-index:50;pointer-events:none;">
+  <!-- Joystick area (left) -->
+  <div id="joystick-zone" style="position:absolute;bottom:20px;left:20px;width:180px;height:180px;pointer-events:auto;touch-action:none;">
+    <div id="joystick-base" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.25);position:absolute;bottom:15px;left:15px;">
+      <div id="joystick-knob" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.4);border:2px solid rgba(255,255,255,0.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
+    </div>
+  </div>
+  <!-- Attack buttons (right) -->
+  <div id="touch-buttons" style="position:absolute;bottom:20px;right:15px;pointer-events:auto;touch-action:none;">
+    <button class="touch-btn touch-quick" data-attack="quick">J<br><span>Quick</span></button>
+    <button class="touch-btn touch-special" data-attack="special">K<br><span>Special</span></button>
+    <button class="touch-btn touch-ultimate" data-attack="ultimate">L<br><span>Ult</span></button>
+    <button class="touch-btn touch-ultra" data-attack="ultra">U<br><span>Ultra</span></button>
+    <button class="touch-btn touch-dodge" data-attack="dodge">⚡<br><span>Dodge</span></button>
+  </div>
+</div>
+
+<style>
+  .touch-btn {
+    width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.5); color: white; font-size: 14px; font-weight: bold;
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; user-select: none; -webkit-user-select: none;
+    touch-action: none; cursor: pointer; line-height: 1.1;
+  }
+  .touch-btn span { font-size: 9px; font-weight: normal; opacity: 0.7; }
+  .touch-btn:active, .touch-btn.pressed { transform: scale(0.9); }
+  .touch-quick   { bottom: 35px; right: 130px; background: rgba(231,76,60,0.5); border-color: #e74c3c; }
+  .touch-special  { bottom: 100px; right: 70px; background: rgba(52,152,219,0.5); border-color: #3498db; }
+  .touch-ultimate { bottom: 35px; right: 10px; background: rgba(155,89,182,0.5); border-color: #9b59b6; }
+  .touch-ultra    { bottom: 100px; right: 190px; background: rgba(241,196,15,0.5); border-color: #f1c40f; }
+  .touch-dodge    { bottom: 165px; right: 130px; background: rgba(46,204,113,0.5); border-color: #2ecc71; }
+  #touch-toggle {
+    position: fixed; bottom: 8px; right: 8px; z-index: 200; background: rgba(0,0,0,0.6);
+    border: 1px solid #e94560; border-radius: 6px; color: #e94560; font-size: 11px;
+    padding: 4px 8px; cursor: pointer; pointer-events: auto;
+  }
+</style>
+
+<script>
+
+// ============================================================
+// TOUCH CONTROLS
+// ============================================================
+let touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
+let touchAttacks = {};
+let touchEnabled = false;
+
+function initTouchControls() {
+  // Auto-detect touch device
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // Add toggle button always (even on desktop for testing)
+  const toggle = document.createElement('button');
+  toggle.id = 'touch-toggle';
+  toggle.textContent = '👆 Touch';
+  toggle.addEventListener('click', () => {
+    touchEnabled = !touchEnabled;
+    document.getElementById('touch-controls').style.display = touchEnabled ? '' : 'none';
+    toggle.style.borderColor = touchEnabled ? '#2ecc71' : '#e94560';
+    toggle.style.color = touchEnabled ? '#2ecc71' : '#e94560';
+  });
+  document.body.appendChild(toggle);
+
+  // Auto-enable on touch devices
+  if (isTouch) {
+    touchEnabled = true;
+    document.getElementById('touch-controls').style.display = '';
+    toggle.style.borderColor = '#2ecc71';
+    toggle.style.color = '#2ecc71';
+  }
+
+  // --- Joystick ---
+  const zone = document.getElementById('joystick-zone');
+  const base = document.getElementById('joystick-base');
+  const knob = document.getElementById('joystick-knob');
+  const maxDist = 45;
+
+  zone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    touchJoystick.active = true;
+    touchJoystick.id = t.identifier;
+    const rect = base.getBoundingClientRect();
+    touchJoystick.cx = rect.left + rect.width / 2;
+    touchJoystick.cy = rect.top + rect.height / 2;
+    updateJoystick(t.clientX, t.clientY);
+  }, { passive: false });
+
+  zone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.identifier === touchJoystick.id) {
+        updateJoystick(t.clientX, t.clientY);
+      }
+    }
+  }, { passive: false });
+
+  zone.addEventListener('touchend', (e) => {
+    for (const t of e.changedTouches) {
+      if (t.identifier === touchJoystick.id) {
+        touchJoystick.active = false;
+        touchJoystick.dx = 0;
+        touchJoystick.dy = 0;
+        knob.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+  });
+  zone.addEventListener('touchcancel', () => {
+    touchJoystick.active = false;
+    touchJoystick.dx = 0;
+    touchJoystick.dy = 0;
+    knob.style.transform = 'translate(-50%, -50%)';
+  });
+
+  function updateJoystick(tx, ty) {
+    let dx = tx - touchJoystick.cx;
+    let dy = ty - touchJoystick.cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > maxDist) {
+      dx = (dx / dist) * maxDist;
+      dy = (dy / dist) * maxDist;
+    }
+    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    touchJoystick.dx = dx / maxDist;
+    touchJoystick.dy = dy / maxDist;
+  }
+
+  // --- Attack Buttons ---
+  const btns = document.querySelectorAll('.touch-btn');
+  btns.forEach(btn => {
+    const attack = btn.dataset.attack;
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      touchAttacks[attack] = true;
+      btn.classList.add('pressed');
+    }, { passive: false });
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      touchAttacks[attack] = false;
+      btn.classList.remove('pressed');
+    });
+    btn.addEventListener('touchcancel', () => {
+      touchAttacks[attack] = false;
+      btn.classList.remove('pressed');
+    });
+  });
+
+  // Prevent default on canvas touch to avoid scrolling
+  document.querySelector('canvas')?.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  document.querySelector('canvas')?.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+}
+
+// Initialize when DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTouchControls);
+} else {
+  initTouchControls();
+}
+</script>
+
 <script>
 // ============================================================
 // POKEMON DATA
@@ -744,7 +906,9 @@ document.addEventListener('keydown', e => {
     gameState = 'menu';
     document.body.style.overflow = '';
     storyActive = false;
+    trainingActive = false;
     const sh = document.getElementById('story-hud'); if (sh) sh.style.display = 'none';
+    const th = document.getElementById('training-hud'); if (th) th.style.display = 'none';
   }
 
   // Secret cheat code: 123456789 = Eric wins
@@ -942,7 +1106,9 @@ function buildMenu() {
     gameState = 'menu';
     document.body.style.overflow = '';
     storyActive = false;
+    trainingActive = false;
     const sh = document.getElementById('story-hud'); if (sh) sh.style.display = 'none';
+    const th = document.getElementById('training-hud'); if (th) th.style.display = 'none';
   });
 
   document.getElementById('restart-ingame-btn').addEventListener('click', () => {
@@ -952,7 +1118,9 @@ function buildMenu() {
     gameState = 'menu';
     document.body.style.overflow = '';
     storyActive = false;
+    trainingActive = false;
     const sh2 = document.getElementById('story-hud'); if (sh2) sh2.style.display = 'none';
+    const th2 = document.getElementById('training-hud'); if (th2) th2.style.display = 'none';
   });
 
   // Setup name buttons for 2P mode
@@ -1378,8 +1546,95 @@ function startGame() {
     return;
   }
 
+  // === TRAINING MODE ===
+  if (selectedMode === 'training') {
+    player = createFighter(selectedPokemon, ARENA_W / 2, ARENA_H - 150, true);
+    enemies = [];
+    // Create training dummy — picks a random Pokémon as the dummy
+    const dummyIds = shuffleArray(Object.keys(POKEMON_DATA).filter(id => id !== selectedPokemon));
+    const dummy = createFighter(dummyIds[0], ARENA_W / 2, 200, false);
+    dummy.hp = 99999;
+    dummy.maxHp = 99999;
+    dummy.isTrainingDummy = true;
+    dummy.radius = 45;
+    enemies.push(dummy);
+    trainingActive = true;
+    buildHUD();
+    updateTrainingHUD();
+    return;
+  }
+
   buildHUD();
 }
+
+let trainingActive = false;
+
+function updateTrainingMoveList(pokemonId) {
+  const data = POKEMON_DATA[pokemonId];
+  if (!data) return;
+  const el = document.getElementById('training-movelist');
+  if (!el) return;
+  const atk = data.attacks;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid #555">
+        <kbd style="background:#333;padding:2px 6px;border-radius:4px;color:#fff">J</kbd> <strong style="color:${atk.quick.color}">${atk.quick.name}</strong><br>
+        <span style="color:#aaa;font-size:11px">Damage: ${atk.quick.damage} | CD: ${(atk.quick.cooldown/1000).toFixed(1)}s</span>
+      </div>
+      <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid #555">
+        <kbd style="background:#333;padding:2px 6px;border-radius:4px;color:#fff">K</kbd> <strong style="color:${atk.special.color}">${atk.special.name}</strong><br>
+        <span style="color:#aaa;font-size:11px">Damage: ${atk.special.damage} | CD: ${(atk.special.cooldown/1000).toFixed(1)}s</span>
+      </div>
+      <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid #555">
+        <kbd style="background:#333;padding:2px 6px;border-radius:4px;color:#fff">L</kbd> <strong style="color:${atk.ultimate.color}">${atk.ultimate.name}</strong><br>
+        <span style="color:#aaa;font-size:11px">Damage: ${atk.ultimate.damage} | CD: ${(atk.ultimate.cooldown/1000).toFixed(1)}s | AOE: ${atk.ultimate.aoe || 'None'}</span>
+      </div>
+      <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid #f39c12">
+        <kbd style="background:#333;padding:2px 6px;border-radius:4px;color:#fff">U</kbd> <strong style="color:${atk.ultra.color}">${atk.ultra.name}</strong><br>
+        <span style="color:#aaa;font-size:11px">Damage: ${atk.ultra.damage} | CD: ${(atk.ultra.cooldown/1000).toFixed(1)}s | ⭐ ULTRA</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;color:#888;font-size:11px;text-align:center">
+      <kbd>WASD</kbd> Move &nbsp;|&nbsp; <kbd>Space</kbd> Dodge &nbsp;|&nbsp; Strong vs: ${data.strongVs} &nbsp;|&nbsp; Weak vs: ${data.weakVs}
+    </div>`;
+}
+
+function updateTrainingHUD() {
+  let hud = document.getElementById('training-hud');
+  if (!hud) {
+    hud = document.createElement('div');
+    hud.id = 'training-hud';
+    hud.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,0.85);border:2px solid #f39c12;border-radius:10px;padding:10px 20px;color:white;text-align:center;font-size:13px;pointer-events:none;min-width:400px;';
+    document.body.appendChild(hud);
+  }
+  if (!trainingActive || !player) {
+    hud.style.display = 'none';
+    return;
+  }
+  hud.style.display = '';
+  const data = player.data;
+  const cd = player.cooldowns;
+  const atk = data.attacks;
+  const bar = (name, key, cdVal, maxCd, color) => {
+    const ready = cdVal <= 0;
+    const pct = ready ? 100 : Math.max(0, 100 - (cdVal / maxCd * 100));
+    const bg = ready ? color : '#333';
+    const label = ready ? '✅ READY' : `${(cdVal / 60).toFixed(1)}s`;
+    return `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">
+      <kbd style="background:#444;padding:1px 5px;border-radius:3px;font-size:11px;min-width:18px">${key}</kbd>
+      <span style="min-width:90px;text-align:left;color:${ready ? '#2ecc71' : '#aaa'}">${name}</span>
+      <div style="flex:1;height:8px;background:#222;border-radius:4px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${bg};border-radius:4px;transition:width 0.1s"></div>
+      </div>
+      <span style="font-size:11px;min-width:55px;color:${ready ? '#2ecc71' : '#e74c3c'}">${label}</span>
+    </div>`;
+  };
+  hud.innerHTML = `<strong style="color:#f39c12">🎯 TRAINING — ${data.name}</strong><br>` +
+    bar(atk.quick.name, 'J', cd.quick, atk.quick.cooldown / 16.67, atk.quick.color) +
+    bar(atk.special.name, 'K', cd.special, atk.special.cooldown / 16.67, atk.special.color) +
+    bar(atk.ultimate.name, 'L', cd.ultimate, atk.ultimate.cooldown / 16.67, atk.ultimate.color) +
+    bar(atk.ultra.name, 'U', cd.ultra, atk.ultra.cooldown / 16.67, atk.ultra.color) +
+    `<div style="margin-top:4px;color:#888;font-size:11px"><kbd>Space</kbd> Dodge (CD: ${player.dodgeCooldown > 0 ? (player.dodgeCooldown / 60).toFixed(1) + 's' : '✅'})</div>`;
 
 // Story mode level definitions
 const STORY_LEVELS = [
@@ -2154,6 +2409,9 @@ function spawnDamageNumber(x, y, dmg, effective) {
 // AI LOGIC
 // ============================================================
 function updateAI(enemy, dt) {
+  // Training dummies don't move or attack
+  if (enemy.isTrainingDummy) return;
+
   const diff = DIFFICULTY[selectedDifficulty];
 
   enemy.aiTimer -= dt;
@@ -2422,6 +2680,11 @@ function update() {
       if (keys['arrowup'])    my -= 1;
       if (keys['arrowdown'])  my += 1;
     }
+    // Touch joystick input
+    if (touchEnabled && touchJoystick.active) {
+      mx += touchJoystick.dx;
+      my += touchJoystick.dy;
+    }
 
     const speed = player.data.speed * (player.isDodging ? 2.5 : 1);
     if (mx !== 0 || my !== 0) {
@@ -2435,14 +2698,14 @@ function update() {
       player.vy *= 0.8;
     }
 
-    // P1 Attacks
-    if (keys['j']) fireProjectile(player, 'quick');
-    if (keys['k']) fireProjectile(player, 'special');
-    if (keys['l']) fireProjectile(player, 'ultimate');
-    if (keys['u']) fireUltraAttack(player);
+    // P1 Attacks (keyboard + touch)
+    if (keys['j'] || touchAttacks.quick) fireProjectile(player, 'quick');
+    if (keys['k'] || touchAttacks.special) fireProjectile(player, 'special');
+    if (keys['l'] || touchAttacks.ultimate) fireProjectile(player, 'ultimate');
+    if (keys['u'] || touchAttacks.ultra) fireUltraAttack(player);
 
-    // P1 Dodge
-    if (keys[' '] || keys['Space']) {
+    // P1 Dodge (keyboard + touch)
+    if (keys[' '] || keys['Space'] || touchAttacks.dodge) {
       if (player.dodgeCooldown <= 0 && !player.isDodging) {
         player.isDodging = true;
         player.dodgeTimer = 15;
@@ -2597,6 +2860,22 @@ function update() {
   // --- Win/Loss check ---
   updateHUD();
   if (storyActive) updateStoryHUD();
+  if (trainingActive) {
+    updateTrainingHUD();
+    // Regen player HP in training
+    if (player.hp < player.maxHp) player.hp = Math.min(player.maxHp, player.hp + 2);
+    player.alive = true;
+    // Regen dummy HP and keep it alive
+    for (const e of enemies) {
+      if (e.isTrainingDummy) {
+        if (e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + 50);
+        e.alive = true; // Never dies
+      }
+    }
+  }
+
+  // Training mode: no win/loss
+  if (selectedMode === 'training') return;
 
   if (selectedMode === '2p') {
     // PvP win condition
