@@ -367,9 +367,9 @@
 </head>
 <body>
 
-<canvas id="game-canvas"></canvas>
+<canvas id="game-canvas" style="display:none"></canvas>
 
-<div id="ui-overlay">
+<div id="ui-overlay" style="display:none">
   <!-- GAME OVER -->
   <div id="game-over-screen" class="game-over-screen" style="display:none">
     <h1 id="go-title"></h1>
@@ -381,7 +381,7 @@
 <!-- MAIN MENU (outside overlay so it receives touch events on tablets) -->
 <div id="menu-screen" class="menu-screen">
     <h1>⚔️ Pokémon Battle Arena</h1>
-    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v9</div>
+    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v10</div>
 
     <h3>Mode</h3>
     <div class="difficulty-select" id="mode-select">
@@ -796,6 +796,8 @@ document.addEventListener('keydown', e => {
   // Space to restart from game over screen
   if (e.code === 'Space' && gameState === 'gameover') {
     document.getElementById('game-over-screen').style.display = 'none';
+    document.getElementById('game-canvas').style.display = 'none';
+    document.getElementById('ui-overlay').style.display = 'none';
     document.getElementById('menu-screen').style.display = '';
     gameState = 'menu';
     document.body.style.overflow = '';
@@ -1003,6 +1005,8 @@ function buildMenu() {
   document.getElementById('start-btn').addEventListener('click', startGame);
   document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('game-over-screen').style.display = 'none';
+    document.getElementById('game-canvas').style.display = 'none';
+    document.getElementById('ui-overlay').style.display = 'none';
     document.getElementById('menu-screen').style.display = '';
     gameState = 'menu';
     document.body.style.overflow = '';
@@ -1016,6 +1020,8 @@ function buildMenu() {
   document.getElementById('restart-ingame-btn').addEventListener('click', () => {
     document.getElementById('hud').style.display = 'none';
     document.getElementById('controls-hud').style.display = 'none';
+    document.getElementById('game-canvas').style.display = 'none';
+    document.getElementById('ui-overlay').style.display = 'none';
     document.getElementById('menu-screen').style.display = '';
     gameState = 'menu';
     document.body.style.overflow = '';
@@ -1334,6 +1340,8 @@ function getAllFighters() {
 function startGame() {
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('game-over-screen').style.display = 'none';
+  document.getElementById('game-canvas').style.display = '';
+  document.getElementById('ui-overlay').style.display = '';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('controls-hud').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -1540,6 +1548,8 @@ function updateTrainingHUD() {
     bar(atk.ultimate.name, 'L', cd.ultimate, atk.ultimate.cooldown / 16.67, atk.ultimate.color) +
     bar(atk.ultra.name, 'U', cd.ultra, atk.ultra.cooldown / 16.67, atk.ultra.color) +
     `<div style="margin-top:4px;color:#888;font-size:11px"><kbd>Space</kbd> Dodge (CD: ${player.dodgeCooldown > 0 ? (player.dodgeCooldown / 60).toFixed(1) + 's' : '✅'})</div>`;
+
+}
 
 // Story mode level definitions
 const STORY_LEVELS = [
