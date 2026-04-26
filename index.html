@@ -499,12 +499,147 @@
 </div>
 
 
+<!-- TOUCH CONTROLS OVERLAY (hidden until gameplay) -->
+<div id="touch-controls" style="display:none;position:fixed;bottom:0;left:0;right:0;top:0;z-index:50;pointer-events:none;">
+  <div id="joystick-zone" style="position:absolute;bottom:20px;left:20px;width:180px;height:180px;pointer-events:auto;touch-action:none;">
+    <div id="joystick-base" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.25);position:absolute;bottom:15px;left:15px;">
+      <div id="joystick-knob" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.4);border:2px solid rgba(255,255,255,0.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
+    </div>
+  </div>
+  <div id="touch-buttons" style="position:absolute;bottom:20px;right:15px;pointer-events:auto;touch-action:none;">
+    <button class="touch-btn touch-quick" data-attack="quick">J<br><span>Quick</span></button>
+    <button class="touch-btn touch-special" data-attack="special">K<br><span>Special</span></button>
+    <button class="touch-btn touch-ultimate" data-attack="ultimate">L<br><span>Ult</span></button>
+    <button class="touch-btn touch-ultra" data-attack="ultra">U<br><span>Ultra</span></button>
+    <button class="touch-btn touch-dodge" data-attack="dodge">⚡<br><span>Dodge</span></button>
+  </div>
+</div>
+
+<style>
+  .touch-btn {
+    width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.5); color: white; font-size: 14px; font-weight: bold;
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; user-select: none; -webkit-user-select: none;
+    touch-action: none; cursor: pointer; line-height: 1.1;
+  }
+  .touch-btn span { font-size: 9px; font-weight: normal; opacity: 0.7; }
+  .touch-btn:active, .touch-btn.pressed { transform: scale(0.9); }
+  .touch-quick   { bottom: 35px; right: 130px; background: rgba(231,76,60,0.5); border-color: #e74c3c; }
+  .touch-special  { bottom: 100px; right: 70px; background: rgba(52,152,219,0.5); border-color: #3498db; }
+  .touch-ultimate { bottom: 35px; right: 10px; background: rgba(155,89,182,0.5); border-color: #9b59b6; }
+  .touch-ultra    { bottom: 100px; right: 190px; background: rgba(241,196,15,0.5); border-color: #f1c40f; }
+  .touch-dodge    { bottom: 165px; right: 130px; background: rgba(46,204,113,0.5); border-color: #2ecc71; }
+</style>
+
 <script>
-// Touch controls removed — stub functions for compatibility
-let touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
-let touchAttacks = {};
-let touchEnabled = false;
-function showTouchControls() {}
+// ============================================================
+// TOUCH CONTROLS (old-Chrome compatible — no ?. or ?? or catch{})
+// ============================================================
+var touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
+var touchAttacks = {};
+var touchEnabled = false;
+
+function showTouchControls(show) {
+  var el = document.getElementById('touch-controls');
+  if (el) el.style.display = show ? '' : 'none';
+}
+
+function initTouchControls() {
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouch) {
+    touchEnabled = true;
+  }
+
+  // --- Joystick ---
+  var zone = document.getElementById('joystick-zone');
+  var base = document.getElementById('joystick-base');
+  var knob = document.getElementById('joystick-knob');
+  var maxDist = 45;
+
+  if (!zone || !base || !knob) return;
+
+  zone.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var t = e.changedTouches[0];
+    touchJoystick.active = true;
+    touchJoystick.id = t.identifier;
+    var rect = base.getBoundingClientRect();
+    touchJoystick.cx = rect.left + rect.width / 2;
+    touchJoystick.cy = rect.top + rect.height / 2;
+    updateJoystick(t.clientX, t.clientY);
+  }, { passive: false });
+
+  zone.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (t.identifier === touchJoystick.id) {
+        updateJoystick(t.clientX, t.clientY);
+      }
+    }
+  }, { passive: false });
+
+  zone.addEventListener('touchend', function(e) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === touchJoystick.id) {
+        touchJoystick.active = false;
+        touchJoystick.dx = 0;
+        touchJoystick.dy = 0;
+        knob.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+  });
+
+  zone.addEventListener('touchcancel', function() {
+    touchJoystick.active = false;
+    touchJoystick.dx = 0;
+    touchJoystick.dy = 0;
+    knob.style.transform = 'translate(-50%, -50%)';
+  });
+
+  function updateJoystick(tx, ty) {
+    var dx = tx - touchJoystick.cx;
+    var dy = ty - touchJoystick.cy;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > maxDist) {
+      dx = (dx / dist) * maxDist;
+      dy = (dy / dist) * maxDist;
+    }
+    knob.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+    touchJoystick.dx = dx / maxDist;
+    touchJoystick.dy = dy / maxDist;
+  }
+
+  // --- Attack Buttons ---
+  var btns = document.querySelectorAll('.touch-btn');
+  for (var b = 0; b < btns.length; b++) {
+    (function(btn) {
+      var attack = btn.getAttribute('data-attack');
+      btn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        touchAttacks[attack] = true;
+        btn.classList.add('pressed');
+      }, { passive: false });
+      btn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        touchAttacks[attack] = false;
+        btn.classList.remove('pressed');
+      });
+      btn.addEventListener('touchcancel', function() {
+        touchAttacks[attack] = false;
+        btn.classList.remove('pressed');
+      });
+    })(btns[b]);
+  }
+}
+
+// Initialize when DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTouchControls);
+} else {
+  initTouchControls();
+}
 </script>
 
 <script>

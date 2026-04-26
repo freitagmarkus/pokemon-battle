@@ -13,7 +13,8 @@ self.addEventListener('install', event => {
       return cache.addAll(urlsToCache);
     })
   );
-  // Don't skipWaiting automatically — wait for user to approve update
+  // Activate new SW immediately so updates take effect right away
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
