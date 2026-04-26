@@ -505,47 +505,6 @@ let touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
 let touchAttacks = {};
 let touchEnabled = false;
 function showTouchControls() {}
-
-// === DIAGNOSTIC PANEL (remove after debugging) ===
-(function() {
-  const diag = document.createElement('div');
-  diag.id = 'diag-panel';
-  diag.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:99999;max-height:150px;overflow-y:auto;';
-  document.body.appendChild(diag);
-  const log = (msg) => {
-    diag.innerHTML += msg + '<br>';
-    diag.scrollTop = diag.scrollHeight;
-    console.log('[DIAG]', msg);
-  };
-  window._diagLog = log;
-  window.addEventListener('error', (e) => log('❌ ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno));
-  window.addEventListener('unhandledrejection', (e) => log('❌ PROMISE: ' + e.reason));
-  log('🔧 Diag panel ready. Touch: ' + ('ontouchstart' in window) + ' | MaxTouch: ' + navigator.maxTouchPoints);
-
-  // After a short delay, check DOM state
-  setTimeout(() => {
-    const cards = document.querySelectorAll('.pokemon-card');
-    const container = document.getElementById('pokemon-select');
-    const menu = document.getElementById('menu-screen');
-    log('📦 Cards in DOM: ' + cards.length);
-    log('📦 Container display: ' + (container ? getComputedStyle(container).display : 'NOT FOUND'));
-    log('📦 Menu display: ' + (menu ? getComputedStyle(menu).display : 'NOT FOUND'));
-    log('📦 Menu visible: ' + (menu ? (menu.offsetWidth > 0) : false));
-    if (typeof POKEMON_DATA !== 'undefined') {
-      log('📦 POKEMON_DATA entries: ' + Object.keys(POKEMON_DATA).length);
-    } else {
-      log('❌ POKEMON_DATA is undefined!');
-    }
-
-    // Test if click handlers work
-    const testBtn = document.querySelector('#mode-select .diff-btn');
-    if (testBtn) {
-      log('🔘 Test btn found: ' + testBtn.textContent.trim());
-      const listeners = testBtn.onclick;
-      log('🔘 Has onclick: ' + !!listeners);
-    }
-  }, 2000);
-})();
 </script>
 
 <script>
@@ -793,20 +752,7 @@ document.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
 
-  // Space to restart from game over screen
-  if (e.code === 'Space' && gameState === 'gameover') {
-    document.getElementById('game-over-screen').style.display = 'none';
-    document.getElementById('game-canvas').style.display = 'none';
-    document.getElementById('ui-overlay').style.display = 'none';
-    document.getElementById('menu-screen').style.display = '';
-    gameState = 'menu';
-    document.body.style.overflow = '';
-    storyActive = false;
-    trainingActive = false;
-    const sh = document.getElementById('story-hud'); if (sh) sh.style.display = 'none';
-    const th = document.getElementById('training-hud'); if (th) th.style.display = 'none';
-    showTouchControls(false);
-  }
+  // (Space-to-restart disabled)
 
   // Secret cheat code: 123456789 = Eric wins
   if (gameState === 'playing') {
