@@ -545,22 +545,22 @@ function initTouchControls() {
   // Auto-detect touch device
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-  // Add toggle button always (even on desktop for testing)
+  // Add toggle button (hidden until game starts)
   const toggle = document.createElement('button');
   toggle.id = 'touch-toggle';
   toggle.textContent = '👆 Touch';
+  toggle.style.display = 'none';
   toggle.addEventListener('click', () => {
     touchEnabled = !touchEnabled;
-    document.getElementById('touch-controls').style.display = touchEnabled ? '' : 'none';
+    showTouchControls(touchEnabled);
     toggle.style.borderColor = touchEnabled ? '#2ecc71' : '#e94560';
     toggle.style.color = touchEnabled ? '#2ecc71' : '#e94560';
   });
   document.body.appendChild(toggle);
 
-  // Auto-enable on touch devices
+  // Auto-enable on touch devices (but don't show yet — wait for gameplay)
   if (isTouch) {
     touchEnabled = true;
-    document.getElementById('touch-controls').style.display = '';
     toggle.style.borderColor = '#2ecc71';
     toggle.style.color = '#2ecc71';
   }
@@ -640,10 +640,13 @@ function initTouchControls() {
       btn.classList.remove('pressed');
     });
   });
+}
 
-  // Prevent default on canvas touch to avoid scrolling
-  document.querySelector('canvas')?.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-  document.querySelector('canvas')?.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+// Show/hide touch controls (only during gameplay)
+function showTouchControls(show) {
+  document.getElementById('touch-controls').style.display = show ? '' : 'none';
+  const toggle = document.getElementById('touch-toggle');
+  if (toggle) toggle.style.display = show ? '' : 'none';
 }
 
 // Initialize when DOM ready
@@ -909,6 +912,7 @@ document.addEventListener('keydown', e => {
     trainingActive = false;
     const sh = document.getElementById('story-hud'); if (sh) sh.style.display = 'none';
     const th = document.getElementById('training-hud'); if (th) th.style.display = 'none';
+    showTouchControls(false);
   }
 
   // Secret cheat code: 123456789 = Eric wins
@@ -1109,6 +1113,7 @@ function buildMenu() {
     trainingActive = false;
     const sh = document.getElementById('story-hud'); if (sh) sh.style.display = 'none';
     const th = document.getElementById('training-hud'); if (th) th.style.display = 'none';
+    showTouchControls(false);
   });
 
   document.getElementById('restart-ingame-btn').addEventListener('click', () => {
@@ -1121,6 +1126,7 @@ function buildMenu() {
     trainingActive = false;
     const sh2 = document.getElementById('story-hud'); if (sh2) sh2.style.display = 'none';
     const th2 = document.getElementById('training-hud'); if (th2) th2.style.display = 'none';
+    showTouchControls(false);
   });
 
   // Setup name buttons for 2P mode
@@ -1434,6 +1440,7 @@ function startGame() {
   document.getElementById('controls-hud').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   gameState = 'playing';
+  if (touchEnabled) showTouchControls(true);
   projectiles = [];
   particles = [];
   damageNumbers = [];
