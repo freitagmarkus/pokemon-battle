@@ -35,6 +35,7 @@
     justify-content: center;
     align-items: center;
     pointer-events: none;
+    overflow: visible;
   }
   #ui-overlay > * { pointer-events: auto; }
 
@@ -369,10 +370,18 @@
 <canvas id="game-canvas"></canvas>
 
 <div id="ui-overlay">
-  <!-- MAIN MENU -->
-  <div id="menu-screen" class="menu-screen">
+  <!-- GAME OVER -->
+  <div id="game-over-screen" class="game-over-screen" style="display:none">
+    <h1 id="go-title"></h1>
+    <p id="go-message"></p>
+    <button class="start-btn" id="restart-btn">Play Again</button>
+  </div>
+</div>
+
+<!-- MAIN MENU (outside overlay so it receives touch events on tablets) -->
+<div id="menu-screen" class="menu-screen">
     <h1>⚔️ Pokémon Battle Arena</h1>
-    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v6</div>
+    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v7</div>
 
     <h3>Mode</h3>
     <div class="difficulty-select" id="mode-select">
@@ -465,14 +474,6 @@
       </div>
     </div>
   </div>
-
-  <!-- GAME OVER -->
-  <div id="game-over-screen" class="game-over-screen" style="display:none">
-    <h1 id="go-title"></h1>
-    <p id="go-message"></p>
-    <button class="start-btn" id="restart-btn">Play Again</button>
-  </div>
-</div>
 
 <!-- HUD -->
 <div id="hud"></div>
