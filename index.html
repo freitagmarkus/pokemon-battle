@@ -381,7 +381,7 @@
 <!-- MAIN MENU (outside overlay so it receives touch events on tablets) -->
 <div id="menu-screen" class="menu-screen">
     <h1>⚔️ Pokémon Battle Arena</h1>
-    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v7</div>
+    <div id="version-label" style="font-size:10px;color:#555;margin-top:-4px;margin-bottom:4px">v8</div>
 
     <h3>Mode</h3>
     <div class="difficulty-select" id="mode-select">
@@ -498,169 +498,54 @@
   ">🔄 Restart</button>
 </div>
 
-<!-- TOUCH CONTROLS OVERLAY -->
-<div id="touch-controls" style="display:none;position:fixed;bottom:0;left:0;right:0;top:0;z-index:50;pointer-events:none;">
-  <!-- Joystick area (left) -->
-  <div id="joystick-zone" style="position:absolute;bottom:20px;left:20px;width:180px;height:180px;pointer-events:auto;touch-action:none;">
-    <div id="joystick-base" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.25);position:absolute;bottom:15px;left:15px;">
-      <div id="joystick-knob" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.4);border:2px solid rgba(255,255,255,0.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
-    </div>
-  </div>
-  <!-- Attack buttons (right) -->
-  <div id="touch-buttons" style="position:absolute;bottom:20px;right:15px;pointer-events:auto;touch-action:none;">
-    <button class="touch-btn touch-quick" data-attack="quick">J<br><span>Quick</span></button>
-    <button class="touch-btn touch-special" data-attack="special">K<br><span>Special</span></button>
-    <button class="touch-btn touch-ultimate" data-attack="ultimate">L<br><span>Ult</span></button>
-    <button class="touch-btn touch-ultra" data-attack="ultra">U<br><span>Ultra</span></button>
-    <button class="touch-btn touch-dodge" data-attack="dodge">⚡<br><span>Dodge</span></button>
-  </div>
-</div>
-
-<style>
-  .touch-btn {
-    width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
-    background: rgba(0,0,0,0.5); color: white; font-size: 14px; font-weight: bold;
-    position: absolute; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; user-select: none; -webkit-user-select: none;
-    touch-action: none; cursor: pointer; line-height: 1.1;
-  }
-  .touch-btn span { font-size: 9px; font-weight: normal; opacity: 0.7; }
-  .touch-btn:active, .touch-btn.pressed { transform: scale(0.9); }
-  .touch-quick   { bottom: 35px; right: 130px; background: rgba(231,76,60,0.5); border-color: #e74c3c; }
-  .touch-special  { bottom: 100px; right: 70px; background: rgba(52,152,219,0.5); border-color: #3498db; }
-  .touch-ultimate { bottom: 35px; right: 10px; background: rgba(155,89,182,0.5); border-color: #9b59b6; }
-  .touch-ultra    { bottom: 100px; right: 190px; background: rgba(241,196,15,0.5); border-color: #f1c40f; }
-  .touch-dodge    { bottom: 165px; right: 130px; background: rgba(46,204,113,0.5); border-color: #2ecc71; }
-  #touch-toggle {
-    position: fixed; bottom: 8px; right: 8px; z-index: 200; background: rgba(0,0,0,0.6);
-    border: 1px solid #e94560; border-radius: 6px; color: #e94560; font-size: 11px;
-    padding: 4px 8px; cursor: pointer; pointer-events: auto;
-  }
-</style>
 
 <script>
-
-// ============================================================
-// TOUCH CONTROLS
-// ============================================================
+// Touch controls removed — stub functions for compatibility
 let touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
 let touchAttacks = {};
 let touchEnabled = false;
+function showTouchControls() {}
 
-function initTouchControls() {
-  // Auto-detect touch device
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+// === DIAGNOSTIC PANEL (remove after debugging) ===
+(function() {
+  const diag = document.createElement('div');
+  diag.id = 'diag-panel';
+  diag.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:99999;max-height:150px;overflow-y:auto;';
+  document.body.appendChild(diag);
+  const log = (msg) => {
+    diag.innerHTML += msg + '<br>';
+    diag.scrollTop = diag.scrollHeight;
+    console.log('[DIAG]', msg);
+  };
+  window._diagLog = log;
+  window.addEventListener('error', (e) => log('❌ ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno));
+  window.addEventListener('unhandledrejection', (e) => log('❌ PROMISE: ' + e.reason));
+  log('🔧 Diag panel ready. Touch: ' + ('ontouchstart' in window) + ' | MaxTouch: ' + navigator.maxTouchPoints);
 
-  // Add toggle button (hidden until game starts)
-  const toggle = document.createElement('button');
-  toggle.id = 'touch-toggle';
-  toggle.textContent = '👆 Touch';
-  toggle.style.display = 'none';
-  toggle.addEventListener('click', () => {
-    touchEnabled = !touchEnabled;
-    showTouchControls(touchEnabled);
-    toggle.style.borderColor = touchEnabled ? '#2ecc71' : '#e94560';
-    toggle.style.color = touchEnabled ? '#2ecc71' : '#e94560';
-  });
-  document.body.appendChild(toggle);
-
-  // Auto-enable on touch devices (but don't show yet — wait for gameplay)
-  if (isTouch) {
-    touchEnabled = true;
-    toggle.style.borderColor = '#2ecc71';
-    toggle.style.color = '#2ecc71';
-  }
-
-  // --- Joystick ---
-  const zone = document.getElementById('joystick-zone');
-  const base = document.getElementById('joystick-base');
-  const knob = document.getElementById('joystick-knob');
-  const maxDist = 45;
-
-  zone.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    touchJoystick.active = true;
-    touchJoystick.id = t.identifier;
-    const rect = base.getBoundingClientRect();
-    touchJoystick.cx = rect.left + rect.width / 2;
-    touchJoystick.cy = rect.top + rect.height / 2;
-    updateJoystick(t.clientX, t.clientY);
-  }, { passive: false });
-
-  zone.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    for (const t of e.changedTouches) {
-      if (t.identifier === touchJoystick.id) {
-        updateJoystick(t.clientX, t.clientY);
-      }
+  // After a short delay, check DOM state
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.pokemon-card');
+    const container = document.getElementById('pokemon-select');
+    const menu = document.getElementById('menu-screen');
+    log('📦 Cards in DOM: ' + cards.length);
+    log('📦 Container display: ' + (container ? getComputedStyle(container).display : 'NOT FOUND'));
+    log('📦 Menu display: ' + (menu ? getComputedStyle(menu).display : 'NOT FOUND'));
+    log('📦 Menu visible: ' + (menu ? (menu.offsetWidth > 0) : false));
+    if (typeof POKEMON_DATA !== 'undefined') {
+      log('📦 POKEMON_DATA entries: ' + Object.keys(POKEMON_DATA).length);
+    } else {
+      log('❌ POKEMON_DATA is undefined!');
     }
-  }, { passive: false });
 
-  zone.addEventListener('touchend', (e) => {
-    for (const t of e.changedTouches) {
-      if (t.identifier === touchJoystick.id) {
-        touchJoystick.active = false;
-        touchJoystick.dx = 0;
-        touchJoystick.dy = 0;
-        knob.style.transform = 'translate(-50%, -50%)';
-      }
+    // Test if click handlers work
+    const testBtn = document.querySelector('#mode-select .diff-btn');
+    if (testBtn) {
+      log('🔘 Test btn found: ' + testBtn.textContent.trim());
+      const listeners = testBtn.onclick;
+      log('🔘 Has onclick: ' + !!listeners);
     }
-  });
-  zone.addEventListener('touchcancel', () => {
-    touchJoystick.active = false;
-    touchJoystick.dx = 0;
-    touchJoystick.dy = 0;
-    knob.style.transform = 'translate(-50%, -50%)';
-  });
-
-  function updateJoystick(tx, ty) {
-    let dx = tx - touchJoystick.cx;
-    let dy = ty - touchJoystick.cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > maxDist) {
-      dx = (dx / dist) * maxDist;
-      dy = (dy / dist) * maxDist;
-    }
-    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-    touchJoystick.dx = dx / maxDist;
-    touchJoystick.dy = dy / maxDist;
-  }
-
-  // --- Attack Buttons ---
-  const btns = document.querySelectorAll('.touch-btn');
-  btns.forEach(btn => {
-    const attack = btn.dataset.attack;
-    btn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      touchAttacks[attack] = true;
-      btn.classList.add('pressed');
-    }, { passive: false });
-    btn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      touchAttacks[attack] = false;
-      btn.classList.remove('pressed');
-    });
-    btn.addEventListener('touchcancel', () => {
-      touchAttacks[attack] = false;
-      btn.classList.remove('pressed');
-    });
-  });
-}
-
-// Show/hide touch controls (only during gameplay)
-function showTouchControls(show) {
-  document.getElementById('touch-controls').style.display = show ? '' : 'none';
-  const toggle = document.getElementById('touch-toggle');
-  if (toggle) toggle.style.display = show ? '' : 'none';
-}
-
-// Initialize when DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initTouchControls);
-} else {
-  initTouchControls();
-}
+  }, 2000);
+})();
 </script>
 
 <script>
