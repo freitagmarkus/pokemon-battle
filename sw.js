@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pokemon-battle-v4';
+const CACHE_NAME = 'pokemon-battle-v5';
 const urlsToCache = [
   './',
   './index.html',
@@ -33,22 +33,33 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request).then(fetchResponse => {
-      // Cache everything for offline use
-      const responseClone = fetchResponse.clone();
-      caches.open(CACHE_NAME).then(cache => {
-        cache.put(event.request, responseClone);
-      });
-      return fetchResponse;
-    }).catch(() => {
-      // Offline fallback: serve from cache
-      return caches.match(event.request).then(response => {
-        if (response) return response;
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+  const url = new URL(event.request.url);
+  const isHTML = event.request.destination === 'document' ||
+                 url.pathname.endsWith('.html') ||
+                 url.pathname.endsWith('/');
+
+  if (isHTML) {
+    // ALWAYS fetch HTML from network — never serve stale index.html
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => {
+        return caches.match(event.request).then(r => r || caches.match('./index.html'));
+      })
+    );
+  } else {
+    // Other assets: try network first, fall back to cache
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+  }
 });
+
