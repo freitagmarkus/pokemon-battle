@@ -1740,6 +1740,13 @@ function startGame() {
 
   // === STORY MODE ===
   if (selectedMode === 'story') {
+    // Hide game canvas during story interstitial — actuallyStartStoryLevel will show it
+    document.getElementById('game-canvas').style.display = 'none';
+    document.getElementById('ui-overlay').style.display = 'none';
+    document.getElementById('hud').style.display = 'none';
+    document.getElementById('controls-hud').style.display = 'none';
+    if (touchEnabled) showTouchControls(false);
+    gameState = 'menu'; // Don't start gameplay yet
     storyLevel = 1;
     storyLives = 3;
     storyScore = 0;
@@ -1912,14 +1919,11 @@ function showStoryInterstitial(level, onDone) {
   // Fade in
   setTimeout(function() { overlay.style.opacity = '1'; }, 50);
 
-  // Auto-advance after 6 seconds
-  var timer = setTimeout(function() { dismiss(); }, 6000);
 
   var dismissed = false;
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
-    clearTimeout(timer);
     overlay.style.opacity = '0';
     setTimeout(function() {
       overlay.style.display = 'none';
@@ -3218,16 +3222,20 @@ function update() {
         if (storyHud) storyHud.style.display = 'none';
         endGame('storycomplete');
       } else {
-        // Next level after brief celebration
+        // Next level — show story interstitial
         storyLevel++;
         updateStoryHUD();
         gameState = 'gameover';
         const storyHud = document.getElementById('story-hud');
         if (storyHud) storyHud.innerHTML = `<strong style="color:#2ecc71">✅ Level ${storyLevel - 1} Complete!</strong><br>+${levelBonus} level bonus, +${hpBonus} HP bonus<br><em>Score: ${storyScore}</em>`;
         playSfx('levelup');
-        setTimeout(() => {
+        // Hide canvas during transition
+        document.getElementById('game-canvas').style.display = 'none';
+        document.getElementById('ui-overlay').style.display = 'none';
+        if (touchEnabled) showTouchControls(false);
+        setTimeout(function() {
           if (storyActive) startStoryLevel();
-        }, 2500);
+        }, 1500);
       }
     }
   } else {
