@@ -1634,6 +1634,8 @@ function startGame() {
   document.getElementById('controls-hud').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   gameState = 'playing';
+  ensureAudio();
+  if (!bgMusicPlaying) startBgMusic();
   if (touchEnabled) showTouchControls(true);
   projectiles = [];
   particles = [];
@@ -2273,6 +2275,7 @@ function fireProjectile(fighter, attackType) {
   if (fighter.cooldowns[attackType] > 0) return;
 
   fighter.cooldowns[attackType] = atk.cooldown;
+  playSfx(attackType);
 
   const dir = { x: fighter.facing.x, y: fighter.facing.y };
   const len = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
@@ -2870,6 +2873,7 @@ function handleProjectileCollisions() {
       if (dist < f.radius + p.size) {
         // Hit!
         p.hit.add(f);
+        playSfx('hit');
 
         const mult = getTypeMultiplier(p.ownerType, f.data.type);
         const diff = DIFFICULTY[selectedDifficulty];
@@ -2926,6 +2930,7 @@ function handleProjectileCollisions() {
         if (f.hp <= 0) {
           f.hp = 0;
           f.alive = false;
+          playSfx('ko');
           // Death explosion
           spawnHitParticles(f.x, f.y, f.data.color, 40);
           spawnHitParticles(f.x, f.y, '#fff', 20);
@@ -2993,6 +2998,7 @@ function update() {
     if (keys[' '] || keys['Space'] || touchAttacks.dodge) {
       if (player.dodgeCooldown <= 0 && !player.isDodging) {
         player.isDodging = true;
+        playSfx('dodge');
         player.dodgeTimer = 15;
         player.invincibleTimer = 15;
         player.dodgeCooldown = 45;
@@ -3218,6 +3224,7 @@ function update() {
         gameState = 'gameover';
         const storyHud = document.getElementById('story-hud');
         if (storyHud) storyHud.innerHTML = `<strong style="color:#2ecc71">✅ Level ${storyLevel - 1} Complete!</strong><br>+${levelBonus} level bonus, +${hpBonus} HP bonus<br><em>Score: ${storyScore}</em>`;
+        playSfx('levelup');
         setTimeout(() => {
           if (storyActive) startStoryLevel();
         }, 2500);
