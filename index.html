@@ -642,6 +642,225 @@ if (document.readyState === 'loading') {
 }
 </script>
 
+<!-- AUDIO SYSTEM -->
+<div id="audio-toggle" style="position:fixed;top:10px;right:10px;z-index:9999;cursor:pointer;background:rgba(0,0,0,0.6);border:1px solid #555;border-radius:8px;padding:6px 12px;color:white;font-size:14px;user-select:none;-webkit-user-select:none;" onclick="toggleAudio()">🔊</div>
+
+<script>
+// ============================================================
+// AUDIO SYSTEM — Procedural chiptune music + synth SFX
+// Uses Web Audio API (no external files needed)
+// ============================================================
+var audioCtx = null;
+var audioMuted = false;
+var bgMusicGain = null;
+var bgMusicPlaying = false;
+var masterGain = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.3;
+    masterGain.connect(audioCtx.destination);
+  } catch(e) {
+    console.log('Audio not supported');
+  }
+}
+
+function toggleAudio() {
+  audioMuted = !audioMuted;
+  document.getElementById('audio-toggle').textContent = audioMuted ? '🔇' : '🔊';
+  if (masterGain) {
+    masterGain.gain.value = audioMuted ? 0 : 0.3;
+  }
+  if (!audioMuted && !bgMusicPlaying) {
+    initAudio();
+    startBgMusic();
+  }
+}
+
+// Ensure audio starts on first user interaction
+function ensureAudio() {
+  if (!audioCtx) {
+    initAudio();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+document.addEventListener('click', ensureAudio, { once: false });
+document.addEventListener('touchstart', ensureAudio, { once: false });
+document.addEventListener('keydown', ensureAudio, { once: false });
+
+// ============================================================
+// BACKGROUND MUSIC — Chiptune Pokémon-style melody
+// ============================================================
+function startBgMusic() {
+  if (!audioCtx || bgMusicPlaying || audioMuted) return;
+  bgMusicPlaying = true;
+
+  bgMusicGain = audioCtx.createGain();
+  bgMusicGain.gain.value = 0.12;
+  bgMusicGain.connect(masterGain);
+
+  // Pokémon-style melody notes (frequency in Hz)
+  var C4=262, D4=294, E4=330, F4=349, G4=392, A4=440, B4=494;
+  var C5=523, D5=587, E5=659, F5=698, G5=784;
+
+  // Two-part melody that loops
+  var melody = [
+    E4, E4, 0, E4, 0, C4, E4, 0, G4, 0, 0, 0, G4/2, 0, 0, 0,
+    C4, 0, 0, G4/2, 0, 0, E4/2*3, 0, 0, A4/2*3, 0, B4/2*3, 0, A4/2*3+20, A4/2*3, 0,
+    G4/2, E4, G4, A4, 0, F4, G4, 0, E4, 0, C4, D4, B4/2*3, 0, 0, 0,
+    C4, 0, 0, G4/2, 0, 0, E4/2*3, 0, 0, A4/2*3, 0, B4/2*3, 0, A4/2*3+20, A4/2*3, 0,
+  ];
+
+  var bass = [
+    C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0,
+    F4/2, 0, C4/2, 0, F4/2, 0, C4/2, 0, G4/2, 0, D4/2, 0, G4/2, 0, D4/2, 0,
+    A4/4*3, 0, E4/2, 0, A4/4*3, 0, E4/2, 0, G4/4*3, 0, D4/2, 0, G4/4*3, 0, D4/2, 0,
+    F4/2, 0, C4/2, 0, F4/2, 0, C4/2, 0, G4/2, 0, D4/2, 0, G4/2, 0, D4/2, 0,
+  ];
+
+  var bpm = 160;
+  var noteLen = 60 / bpm / 2; // 16th notes
+  var loopLen = melody.length * noteLen;
+
+  function scheduleLoop(startTime) {
+    for (var i = 0; i < melody.length; i++) {
+      var t = startTime + i * noteLen;
+      // Melody (square wave)
+      if (melody[i] > 0) {
+        playNote(melody[i], t, noteLen * 0.8, 'square', 0.08, bgMusicGain);
+      }
+      // Bass (triangle wave)
+      if (bass[i % bass.length] > 0) {
+        playNote(bass[i % bass.length], t, noteLen * 0.9, 'triangle', 0.1, bgMusicGain);
+      }
+    }
+    // Schedule next loop
+    setTimeout(function() {
+      if (bgMusicPlaying && !audioMuted) {
+        scheduleLoop(startTime + loopLen);
+      }
+    }, (loopLen - 0.5) * 1000);
+  }
+
+  scheduleLoop(audioCtx.currentTime + 0.1);
+}
+
+function stopBgMusic() {
+  bgMusicPlaying = false;
+}
+
+function playNote(freq, time, duration, type, vol, dest) {
+  if (!audioCtx) return;
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = type || 'square';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol || 0.08, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  osc.connect(gain);
+  gain.connect(dest || masterGain);
+  osc.start(time);
+  osc.stop(time + duration + 0.05);
+}
+
+// ============================================================
+// SOUND EFFECTS — Synthesized attack & impact sounds
+// ============================================================
+function playSfx(type) {
+  if (!audioCtx || audioMuted) return;
+  var now = audioCtx.currentTime;
+
+  switch(type) {
+    case 'quick':
+      // Short pew
+      sweepNote(800, 400, 0.08, 'square', 0.15);
+      break;
+    case 'special':
+      // Laser zap
+      sweepNote(600, 200, 0.15, 'sawtooth', 0.1);
+      sweepNote(900, 300, 0.12, 'square', 0.06);
+      break;
+    case 'ultimate':
+      // Big boom
+      sweepNote(300, 60, 0.3, 'sawtooth', 0.15);
+      sweepNote(150, 30, 0.4, 'triangle', 0.12);
+      noiseHit(0.2, 0.1);
+      break;
+    case 'ultra':
+      // Epic power-up
+      sweepNote(200, 800, 0.3, 'square', 0.1);
+      sweepNote(300, 1200, 0.4, 'sawtooth', 0.06);
+      sweepNote(100, 50, 0.5, 'triangle', 0.08);
+      break;
+    case 'hit':
+      // Impact
+      sweepNote(400, 100, 0.06, 'square', 0.12);
+      noiseHit(0.04, 0.08);
+      break;
+    case 'dodge':
+      // Whoosh
+      sweepNote(300, 600, 0.1, 'sine', 0.08);
+      break;
+    case 'ko':
+      // Defeat
+      sweepNote(500, 100, 0.15, 'square', 0.12);
+      setTimeout(function() { sweepNote(400, 80, 0.15, 'square', 0.1); }, 150);
+      setTimeout(function() { sweepNote(200, 50, 0.3, 'sawtooth', 0.1); }, 300);
+      break;
+    case 'levelup':
+      // Victory jingle
+      sweepNote(523, 523, 0.1, 'square', 0.1);
+      setTimeout(function() { sweepNote(659, 659, 0.1, 'square', 0.1); }, 100);
+      setTimeout(function() { sweepNote(784, 784, 0.1, 'square', 0.1); }, 200);
+      setTimeout(function() { sweepNote(1047, 1047, 0.2, 'square', 0.12); }, 300);
+      break;
+    case 'menuclick':
+      sweepNote(800, 1000, 0.05, 'square', 0.06);
+      break;
+  }
+}
+
+function sweepNote(startFreq, endFreq, duration, type, vol) {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = type || 'square';
+  osc.frequency.setValueAtTime(startFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(endFreq, 20), now + duration);
+  gain.gain.setValueAtTime(vol || 0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(now);
+  osc.stop(now + duration + 0.05);
+}
+
+function noiseHit(duration, vol) {
+  if (!audioCtx) return;
+  var now = audioCtx.currentTime;
+  var bufferSize = audioCtx.sampleRate * duration;
+  var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  var data = buffer.getChannelData(0);
+  for (var i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+  var noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  var gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol || 0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  noise.connect(gain);
+  gain.connect(masterGain);
+  noise.start(now);
+}
+</script>
+
 <script>
 // ============================================================
 // POKEMON DATA
@@ -1622,24 +1841,105 @@ function updateTrainingHUD() {
 
 // Story mode level definitions
 const STORY_LEVELS = [
-  { name: 'The Beginning', enemies: 1, baseDiff: 'baby', desc: 'A wild Pokémon appears!' },
-  { name: 'Double Trouble', enemies: 2, baseDiff: 'baby', desc: 'Two challengers step forward!' },
-  { name: 'Rising Heat', enemies: 2, baseDiff: 'easy', desc: 'The opponents get smarter...' },
-  { name: 'The Gauntlet', enemies: 3, baseDiff: 'easy', desc: 'Three against one!' },
-  { name: 'Turning Point', enemies: 3, baseDiff: 'medium', desc: 'The battles intensify!' },
-  { name: 'No Mercy', enemies: 4, baseDiff: 'medium', desc: 'They keep coming!' },
-  { name: 'Elite Four', enemies: 4, baseDiff: 'hard', desc: 'Only the strongest survive!' },
-  { name: 'Champion\'s Gate', enemies: 5, baseDiff: 'hard', desc: 'The final stretch!' },
-  { name: 'Legendary Swarm', enemies: 6, baseDiff: 'hard', desc: 'A legendary battle unfolds!' },
-  { name: 'Final Boss', enemies: 1, baseDiff: 'hard', boss: true, desc: 'The ultimate champion awaits!' },
+  { name: 'The Beginning', enemies: 1, baseDiff: 'baby', desc: 'A wild Pokémon appears!',
+    story: '🌅 Your Pokémon wakes up from a nap. "What a beautiful day to pick fights with strangers!" it thinks. A rustling in the bushes catches its attention...' },
+  { name: 'Double Trouble', enemies: 2, baseDiff: 'baby', desc: 'Two challengers step forward!',
+    story: '😤 Word spreads fast. "Did you hear? Some Pokémon just beat up Gerald!" Two angry fighters appear. "That was our friend Gerald! He owed us lunch money!"' },
+  { name: 'Rising Heat', enemies: 2, baseDiff: 'easy', desc: 'The opponents get smarter...',
+    story: '📱 A news alert pops up: "BREAKING: Local Pokémon goes on unhinged winning streak. Experts say they might be slightly too powerful." Your Pokémon flexes for the camera.' },
+  { name: 'The Gauntlet', enemies: 3, baseDiff: 'easy', desc: 'Three against one!',
+    story: '🍕 Your Pokémon stops at a pizza shop. Three tough-looking Pokémon walk in. "Hey, that\'s the last slice of pepperoni!" Your Pokémon stuffs it in its mouth. "...worth it."' },
+  { name: 'Turning Point', enemies: 3, baseDiff: 'medium', desc: 'The battles intensify!',
+    story: '🎵 Your Pokémon puts on dramatic battle music. "Every hero needs a training montage!" it says, doing push-ups. It does exactly two push-ups and declares itself ready.' },
+  { name: 'No Mercy', enemies: 4, baseDiff: 'medium', desc: 'They keep coming!',
+    story: '📋 A Pokémon in a suit approaches with a clipboard. "We\'ve received 47 complaints about you. Please stop. Actually, never mind — four more challengers are here." Your Pokémon cracks its knuckles.' },
+  { name: 'Elite Four', enemies: 4, baseDiff: 'hard', desc: 'Only the strongest survive!',
+    story: '👑 "Welcome to the Elite Four!" announces a voice. Your Pokémon looks around nervously. "Wait, I have to fight FOUR elites? I thought this was a buffet invitation!"' },
+  { name: 'Champion\'s Gate', enemies: 5, baseDiff: 'hard', desc: 'The final stretch!',
+    story: '🚪 A massive golden gate looms ahead. A sign reads: "Champion\'s Gate — No crying, no rage-quitting, no blaming lag." Your Pokémon takes a deep breath. "I was born for this. Also I\'m terrified."' },
+  { name: 'Legendary Swarm', enemies: 6, baseDiff: 'hard', desc: 'A legendary battle unfolds!',
+    story: '🌩️ The sky darkens. Six legendary Pokémon descend from the clouds. Your Pokémon looks up and whispers: "I should\'ve stayed in bed today." Then smiles. "...but where\'s the fun in that?"' },
+  { name: 'Final Boss', enemies: 1, baseDiff: 'hard', boss: true, desc: 'The ultimate champion awaits!',
+    story: '🏆 A single figure stands in the arena. The crowd goes silent. The champion speaks: "I\'ve trained for 10,000 hours." Your Pokémon responds: "Cool. I had a really good breakfast." THE FINAL BATTLE BEGINS!' },
 ];
 
 function startStoryLevel() {
   const level = STORY_LEVELS[storyLevel - 1];
   if (!level) return;
 
+  // Show story interstitial if there's story text
+  if (level.story) {
+    showStoryInterstitial(level, function() {
+      actuallyStartStoryLevel(level);
+    });
+  } else {
+    actuallyStartStoryLevel(level);
+  }
+}
+
+function showStoryInterstitial(level, onDone) {
+  // Create or reuse story overlay
+  var overlay = document.getElementById('story-interstitial');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'story-interstitial';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;cursor:pointer;opacity:0;transition:opacity 0.5s;';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  overlay.style.opacity = '0';
+
+  var playerPokeName = POKEMON_DATA[selectedPokemon] ? POKEMON_DATA[selectedPokemon].name : selectedPokemon;
+  var storyText = level.story.replace(/Your Pokémon/g, playerPokeName);
+
+  overlay.innerHTML = '<div style="text-align:center;max-width:700px;">' +
+    '<div style="font-size:14px;color:#f39c12;letter-spacing:3px;margin-bottom:12px;">📜 CHAPTER ' + storyLevel + '</div>' +
+    '<div style="font-size:28px;font-weight:bold;color:#e94560;margin-bottom:20px;">' + level.name + '</div>' +
+    '<div style="font-size:18px;color:#eee;line-height:1.7;margin-bottom:30px;font-style:italic;">' + storyText + '</div>' +
+    '<div style="font-size:13px;color:#666;animation:pulse 1.5s infinite;">Tap or press any key to continue...</div>' +
+    '</div>';
+
+  // Add pulse animation if not already present
+  if (!document.getElementById('story-pulse-style')) {
+    var style = document.createElement('style');
+    style.id = 'story-pulse-style';
+    style.textContent = '@keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }';
+    document.head.appendChild(style);
+  }
+
+  // Fade in
+  setTimeout(function() { overlay.style.opacity = '1'; }, 50);
+
+  // Auto-advance after 6 seconds
+  var timer = setTimeout(function() { dismiss(); }, 6000);
+
+  var dismissed = false;
+  function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+    clearTimeout(timer);
+    overlay.style.opacity = '0';
+    setTimeout(function() {
+      overlay.style.display = 'none';
+      onDone();
+    }, 400);
+  }
+
+  // Tap or key to skip
+  overlay.onclick = dismiss;
+  function keyDismiss(e) {
+    dismiss();
+    document.removeEventListener('keydown', keyDismiss);
+  }
+  document.addEventListener('keydown', keyDismiss);
+}
+
+function actuallyStartStoryLevel(level) {
+
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('game-over-screen').style.display = 'none';
+  document.getElementById('game-canvas').style.display = '';
+  document.getElementById('ui-overlay').style.display = '';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('controls-hud').style.display = 'flex';
   gameState = 'playing';
