@@ -1211,10 +1211,9 @@ function renderLeaderboard() {
   const names = ['Henry', 'Eric', 'Papa'];
   const pokemonNames = Object.keys(POKEMON_DATA);
 
-  let html = '<thead><tr><th>Player</th><th>Wins</th><th>Draws</th><th>Games</th><th>Win %</th><th>Fav Pokémon</th></tr></thead><tbody>';
+  let html = '<thead><tr><th>Player</th><th>Wins</th><th>Draws</th><th>Fav Pokémon</th></tr></thead><tbody>';
   for (const name of names) {
     const d = lb[name] || { wins: 0, games: 0, draws: 0, pokemon: {} };
-    const pct = d.games > 0 ? Math.round(d.wins / d.games * 100) : 0;
     // Find most picked pokemon
     let fav = '-';
     let maxPicks = 0;
@@ -1228,14 +1227,9 @@ function renderLeaderboard() {
       <td><strong>${name}</strong></td>
       <td>${d.wins}</td>
       <td>${d.draws || 0}</td>
-      <td>${d.games}</td>
-      <td>${pct}%</td>
       <td>${fav}</td>
     </tr>`;
   }
-  // Total row
-  const total = names.reduce((sum, n) => sum + ((lb[n] && lb[n].games) || 0), 0) / 2; // each game counted for 2 players
-  html += `<tr style="border-top:2px solid #444"><td colspan="3"><strong>Total Games</strong></td><td colspan="3"><strong>${Math.round(total)}</strong></td></tr>`;
   html += '</tbody>';
   table.innerHTML = html;
 }
@@ -1252,14 +1246,13 @@ function render1PLeaderboard() {
   const table = document.getElementById('leaderboard-1p-table');
   if (!table) return;
 
-  let html = '<thead><tr style="border-bottom:1px solid #444"><th style="color:#e94560;padding:4px 8px;text-align:left">Pokémon</th><th style="color:#e94560;padding:4px 8px">W</th><th style="color:#e94560;padding:4px 8px">L</th><th style="color:#e94560;padding:4px 8px">Games</th><th style="color:#e94560;padding:4px 8px">Win%</th><th style="color:#e94560;padding:4px 8px">Best Diff</th></tr></thead><tbody>';
+  let html = '<thead><tr style="border-bottom:1px solid #444"><th style="color:#e94560;padding:4px 8px;text-align:left">Pokémon</th><th style="color:#e94560;padding:4px 8px">Wins</th><th style="color:#e94560;padding:4px 8px">Best Diff</th></tr></thead><tbody>';
 
-  let totalGames = 0;
+  let hasData = false;
   for (const [pid, data] of Object.entries(POKEMON_DATA)) {
     const d = lb[pid];
     if (!d || d.games === 0) continue;
-    totalGames += d.games;
-    const pct = d.games > 0 ? Math.round(d.wins / d.games * 100) : 0;
+    hasData = true;
     // Find hardest difficulty they won on
     let bestDiff = '-';
     const diffOrder = ['hard', 'medium', 'easy', 'baby'];
@@ -1269,16 +1262,11 @@ function render1PLeaderboard() {
     html += `<tr style="border-bottom:1px solid #222">
       <td style="padding:3px 8px"><strong>${data.name}</strong></td>
       <td style="padding:3px 8px;text-align:center">${d.wins}</td>
-      <td style="padding:3px 8px;text-align:center">${d.losses}</td>
-      <td style="padding:3px 8px;text-align:center">${d.games}</td>
-      <td style="padding:3px 8px;text-align:center">${pct}%</td>
       <td style="padding:3px 8px;text-align:center">${bestDiff}</td>
     </tr>`;
   }
-  if (totalGames === 0) {
-    html += '<tr><td colspan="6" style="padding:8px;text-align:center;color:#666">No games played yet</td></tr>';
-  } else {
-    html += `<tr style="border-top:2px solid #444"><td colspan="3" style="padding:3px 8px"><strong>Total</strong></td><td colspan="3" style="padding:3px 8px"><strong>${totalGames} games</strong></td></tr>`;
+  if (!hasData) {
+    html += '<tr><td colspan="3" style="padding:8px;text-align:center;color:#666">No games played yet</td></tr>';
   }
   html += '</tbody>';
   table.innerHTML = html;
