@@ -1006,22 +1006,6 @@ const POKEMON_DATA = {
     },
     strongVs: 'ghost', weakVs: 'fire',
   },
-  mcelli: {
-    name: 'McElli',
-    type: 'fairy',
-    dexNum: 10225,  // Galarian Rapidash — the pink unicorn!
-    color: '#ff69b4',
-    colorLight: '#ffb6c1',
-    hp: 370,
-    speed: 4.6,
-    attacks: {
-      quick:   { name: 'Sparkle Kiss',  damage: 16, range: 75,  cooldown: 330,  color: '#ff69b4', size: 9,  speed: 9.5, lifetime: 32 },
-      special: { name: 'Rainbow Beam',  damage: 48, range: 230, cooldown: 1350, color: '#ff85c8', size: 18, speed: 7, lifetime: 60, piercing: true },
-      ultimate:{ name: 'Fairy Dance',   damage: 88, range: 250, cooldown: 4000, color: '#ffb6c1', size: 32, speed: 5, lifetime: 70, aoe: 60 },
-      ultra:   { name: 'Glitter Storm',  damage: '10×28', cooldown: 5800, color: '#ff69b4' },
-    },
-    strongVs: 'ghost', weakVs: 'fire',
-  },
 };
 
 // ============================================================
@@ -2756,72 +2740,6 @@ function fireUltraAttack(fighter) {
         vy: Math.sin(a) * (3 + Math.random() * 5),
         life: 20 + Math.random() * 15, maxLife: 35,
         size: 3 + Math.random() * 5, color: i % 2 === 0 ? '#ffeaa7' : '#fab1a0',
-      });
-    }
-  } else if (fighter.id === 'mcelli') {
-    // === GLITTER STORM: 10 sparkly hearts rain down on enemies ===
-    const allFighters = getAllFighters().filter(f => {
-      if (f === fighter || !f.alive) return false;
-      if (fighter.isPlayer && !f.isPlayer) return true;
-      if (!fighter.isPlayer && f.isPlayer) return true;
-      return false;
-    });
-    const heartCount = 10;
-    for (let i = 0; i < heartCount; i++) {
-      const target = allFighters.length > 0 ? allFighters[Math.floor(Math.random() * allFighters.length)] : null;
-      const bx = target ? target.x + (Math.random() - 0.5) * 100 : Math.random() * ARENA_W;
-      const by = target ? target.y + (Math.random() - 0.5) * 100 : Math.random() * ARENA_H;
-      const sparkleColors = ['#ff69b4', '#ff85c8', '#ffb6c1', '#ff1493', '#ff91a4'];
-      const proj = {
-        x: bx + (Math.random() - 0.5) * 40,
-        y: -30,
-        vx: (Math.random() - 0.5) * 2,
-        vy: 10 + Math.random() * 4,
-        size: 12 + Math.random() * 6,
-        color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
-        damage: 28,
-        owner: fighter,
-        ownerType: fighter.data.type,
-        lifetime: 65,
-        piercing: false,
-        aoe: 35,
-        attackType: 'ultra',
-        hit: new Set(),
-        trail: [],
-      };
-      setTimeout(() => {
-        if (gameState === 'playing') {
-          projectiles.push(proj);
-          // Pink sparkle trail
-          for (let j = 0; j < 8; j++) {
-            particles.push({
-              x: proj.x + (Math.random() - 0.5) * 20,
-              y: 40,
-              vx: (Math.random() - 0.5) * 3,
-              vy: Math.random() * 2 + 1,
-              life: 15 + Math.random() * 10, maxLife: 25,
-              size: 3 + Math.random() * 4,
-              color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
-            });
-          }
-        }
-      }, i * 100);
-    }
-    // Pink screen flash
-    screenFlashes.push({ life: 22, maxLife: 22, color: 'rgba(255, 105, 180, 0.3)' });
-    shakeTimer = 22;
-    shakeIntensity = 6;
-    // Radial sparkle burst from McElli
-    for (let i = 0; i < 45; i++) {
-      const a = (i / 45) * Math.PI * 2;
-      const sparkleColors2 = ['#ff69b4', '#ffb6c1', '#ff1493', '#ffc0cb', '#ff85c8'];
-      particles.push({
-        x: fighter.x, y: fighter.y,
-        vx: Math.cos(a) * (2 + Math.random() * 5),
-        vy: Math.sin(a) * (2 + Math.random() * 5),
-        life: 22 + Math.random() * 15, maxLife: 37,
-        size: 3 + Math.random() * 5,
-        color: sparkleColors2[Math.floor(Math.random() * sparkleColors2.length)],
       });
     }
   }
