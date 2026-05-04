@@ -389,6 +389,7 @@
       <button class="diff-btn" data-mode="2p">👥 2P PvP</button>
       <button class="diff-btn" data-mode="coop">🤝 2P Co-op</button>
       <button class="diff-btn" data-mode="story">📜 Story Mode</button>
+      <button class="diff-btn" data-mode="story2p">📜 2P Story</button>
       <button class="diff-btn" data-mode="training">🎯 Training</button>
     </div>
 
@@ -449,8 +450,12 @@
     </div>
 
     <div id="story-options" style="display:none">
-      <h3>Player Name</h3>
-      <input type="text" id="story-name-input" class="name-input" placeholder="Enter your name..." maxlength="15" autocomplete="off">
+      <h3>Player 1 Name</h3>
+      <input type="text" id="story-name-input" class="name-input" placeholder="Enter P1 name..." maxlength="15" autocomplete="off">
+      <div id="story-p2-section" style="display:none">
+        <h3>Player 2 Name</h3>
+        <input type="text" id="story-p2-name-input" class="name-input" placeholder="Enter P2 name..." maxlength="15" autocomplete="off">
+      </div>
       <h3>Difficulty</h3>
       <div class="difficulty-select" id="story-difficulty-select">
         <button class="diff-btn" data-diff="baby">👶 Baby</button>
@@ -499,11 +504,11 @@
 </div>
 
 
-<!-- TOUCH CONTROLS OVERLAY (hidden until gameplay) -->
+<!-- TOUCH CONTROLS OVERLAY P1 (hidden until gameplay) -->
 <div id="touch-controls" style="display:none;position:fixed;bottom:0;left:0;right:0;top:0;z-index:50;pointer-events:none;">
   <div id="joystick-zone" style="position:absolute;bottom:20px;left:20px;width:180px;height:180px;pointer-events:auto;touch-action:none;">
-    <div id="joystick-base" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.25);position:absolute;bottom:15px;left:15px;">
-      <div id="joystick-knob" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.4);border:2px solid rgba(255,255,255,0.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
+    <div id="joystick-base" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(231,76,60,0.5);position:absolute;bottom:15px;left:15px;">
+      <div id="joystick-knob" style="width:60px;height:60px;border-radius:50%;background:rgba(231,76,60,0.4);border:2px solid rgba(231,76,60,0.7);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
     </div>
   </div>
   <div id="touch-buttons" style="position:absolute;bottom:20px;right:15px;pointer-events:auto;touch-action:none;">
@@ -513,9 +518,30 @@
     <button class="touch-btn touch-ultra" data-attack="ultra">U<br><span>Ultra</span></button>
     <button class="touch-btn touch-dodge" data-attack="dodge">⚡<br><span>Dodge</span></button>
   </div>
+  <!-- P1 label -->
+  <div id="p1-touch-label" style="position:absolute;bottom:205px;left:50px;color:rgba(231,76,60,0.6);font-size:14px;font-weight:bold;pointer-events:none;display:none;">⭐ P1</div>
+</div>
+
+<!-- TOUCH CONTROLS OVERLAY P2 (hidden until 2P gameplay) -->
+<div id="touch-controls-p2" style="display:none;position:fixed;bottom:0;left:0;right:0;top:0;z-index:50;pointer-events:none;">
+  <div id="joystick-zone-p2" style="position:absolute;bottom:20px;right:20px;width:180px;height:180px;pointer-events:auto;touch-action:none;">
+    <div id="joystick-base-p2" style="width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(52,152,219,0.5);position:absolute;bottom:15px;right:15px;">
+      <div id="joystick-knob-p2" style="width:60px;height:60px;border-radius:50%;background:rgba(52,152,219,0.4);border:2px solid rgba(52,152,219,0.7);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none;"></div>
+    </div>
+  </div>
+  <div id="touch-buttons-p2" style="position:absolute;bottom:20px;right:220px;pointer-events:auto;touch-action:none;">
+    <button class="touch-btn-p2 touch-quick-p2" data-attack="quick">7<br><span>Quick</span></button>
+    <button class="touch-btn-p2 touch-special-p2" data-attack="special">8<br><span>Special</span></button>
+    <button class="touch-btn-p2 touch-ultimate-p2" data-attack="ultimate">9<br><span>Ult</span></button>
+    <button class="touch-btn-p2 touch-ultra-p2" data-attack="ultra">0<br><span>Ultra</span></button>
+    <button class="touch-btn-p2 touch-dodge-p2" data-attack="dodge">⚡<br><span>Dodge</span></button>
+  </div>
+  <!-- P2 label -->
+  <div style="position:absolute;bottom:205px;right:50px;color:rgba(52,152,219,0.6);font-size:14px;font-weight:bold;pointer-events:none;">🎮 P2</div>
 </div>
 
 <style>
+  /* === P1 Touch Buttons (right side) === */
   .touch-btn {
     width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
     background: rgba(0,0,0,0.5); color: white; font-size: 14px; font-weight: bold;
@@ -530,6 +556,22 @@
   .touch-ultimate { bottom: 35px; right: 10px; background: rgba(155,89,182,0.5); border-color: #9b59b6; }
   .touch-ultra    { bottom: 100px; right: 190px; background: rgba(241,196,15,0.5); border-color: #f1c40f; }
   .touch-dodge    { bottom: 165px; right: 130px; background: rgba(46,204,113,0.5); border-color: #2ecc71; }
+
+  /* === P2 Touch Buttons (left side, mirrored) === */
+  .touch-btn-p2 {
+    width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.5); color: white; font-size: 14px; font-weight: bold;
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; user-select: none; -webkit-user-select: none;
+    touch-action: none; cursor: pointer; line-height: 1.1;
+  }
+  .touch-btn-p2 span { font-size: 9px; font-weight: normal; opacity: 0.7; }
+  .touch-btn-p2:active, .touch-btn-p2.pressed { transform: scale(0.9); }
+  .touch-quick-p2   { bottom: 35px; right: 130px; background: rgba(231,76,60,0.5); border-color: #e74c3c; }
+  .touch-special-p2  { bottom: 100px; right: 70px; background: rgba(52,152,219,0.5); border-color: #3498db; }
+  .touch-ultimate-p2 { bottom: 35px; right: 10px; background: rgba(155,89,182,0.5); border-color: #9b59b6; }
+  .touch-ultra-p2    { bottom: 100px; right: 190px; background: rgba(241,196,15,0.5); border-color: #f1c40f; }
+  .touch-dodge-p2    { bottom: 165px; right: 130px; background: rgba(46,204,113,0.5); border-color: #2ecc71; }
 </style>
 
 <script>
@@ -538,11 +580,60 @@
 // ============================================================
 var touchJoystick = { active: false, id: null, dx: 0, dy: 0 };
 var touchAttacks = {};
+var touchJoystickP2 = { active: false, id: null, dx: 0, dy: 0 };
+var touchAttacksP2 = {};
 var touchEnabled = false;
 
 function showTouchControls(show) {
   var el = document.getElementById('touch-controls');
   if (el) el.style.display = show ? '' : 'none';
+  var el2 = document.getElementById('touch-controls-p2');
+  var is2p = (selectedMode === '2p' || selectedMode === 'coop' || selectedMode === 'story2p');
+  if (el2) el2.style.display = (show && is2p) ? '' : 'none';
+
+  // In 2P mode, move P1 buttons from right side to center-left
+  var p1Btns = document.getElementById('touch-buttons');
+  if (p1Btns) {
+    if (show && is2p) {
+      // Anchor P1 button container to left side
+      p1Btns.style.right = '';
+      p1Btns.style.left = '220px';
+      p1Btns.style.width = '260px';
+      p1Btns.style.height = '240px';
+      // Mirror button positions: use left-based offsets instead of right
+      var btnMap = {
+        'quick':    { bottom: '35px',  left: '130px' },
+        'special':  { bottom: '100px', left: '190px' },
+        'ultimate': { bottom: '35px',  left: '250px' },
+        'ultra':    { bottom: '100px', left: '70px' },
+        'dodge':    { bottom: '165px', left: '130px' }
+      };
+      var p1BtnEls = p1Btns.querySelectorAll('.touch-btn');
+      for (var i = 0; i < p1BtnEls.length; i++) {
+        var atk = p1BtnEls[i].getAttribute('data-attack');
+        if (btnMap[atk]) {
+          p1BtnEls[i].style.right = '';
+          p1BtnEls[i].style.left = btnMap[atk].left;
+          p1BtnEls[i].style.bottom = btnMap[atk].bottom;
+        }
+      }
+    } else {
+      // Restore default: right-side positioning
+      p1Btns.style.left = '';
+      p1Btns.style.width = '';
+      p1Btns.style.height = '';
+      p1Btns.style.right = '15px';
+      var p1BtnEls2 = p1Btns.querySelectorAll('.touch-btn');
+      for (var j = 0; j < p1BtnEls2.length; j++) {
+        p1BtnEls2[j].style.left = '';
+        // CSS will handle right-based positioning from classes
+      }
+    }
+  }
+
+  // Show P1/P2 labels only in 2P mode
+  var p1Label = document.getElementById('p1-touch-label');
+  if (p1Label) p1Label.style.display = (show && is2p) ? '' : 'none';
 }
 
 function initTouchControls() {
@@ -598,6 +689,29 @@ function initTouchControls() {
     knob.style.transform = 'translate(-50%, -50%)';
   });
 
+  // Mouse support for laptop testing (P1 joystick)
+  zone.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    touchJoystick.active = true;
+    var rect = base.getBoundingClientRect();
+    touchJoystick.cx = rect.left + rect.width / 2;
+    touchJoystick.cy = rect.top + rect.height / 2;
+    updateJoystick(e.clientX, e.clientY);
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (touchJoystick.active) {
+      updateJoystick(e.clientX, e.clientY);
+    }
+  });
+  document.addEventListener('mouseup', function() {
+    if (touchJoystick.active) {
+      touchJoystick.active = false;
+      touchJoystick.dx = 0;
+      touchJoystick.dy = 0;
+      knob.style.transform = 'translate(-50%, -50%)';
+    }
+  });
+
   function updateJoystick(tx, ty) {
     var dx = tx - touchJoystick.cx;
     var dy = ty - touchJoystick.cy;
@@ -611,7 +725,7 @@ function initTouchControls() {
     touchJoystick.dy = dy / maxDist;
   }
 
-  // --- Attack Buttons ---
+  // --- P1 Attack Buttons ---
   var btns = document.querySelectorAll('.touch-btn');
   for (var b = 0; b < btns.length; b++) {
     (function(btn) {
@@ -630,7 +744,139 @@ function initTouchControls() {
         touchAttacks[attack] = false;
         btn.classList.remove('pressed');
       });
+      // Mouse support for laptop testing
+      btn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        touchAttacks[attack] = true;
+        btn.classList.add('pressed');
+      });
+      btn.addEventListener('mouseup', function(e) {
+        touchAttacks[attack] = false;
+        btn.classList.remove('pressed');
+      });
+      btn.addEventListener('mouseleave', function() {
+        touchAttacks[attack] = false;
+        btn.classList.remove('pressed');
+      });
     })(btns[b]);
+  }
+
+  // --- P2 Joystick ---
+  var zoneP2 = document.getElementById('joystick-zone-p2');
+  var baseP2 = document.getElementById('joystick-base-p2');
+  var knobP2 = document.getElementById('joystick-knob-p2');
+
+  if (zoneP2 && baseP2 && knobP2) {
+    zoneP2.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      var t = e.changedTouches[0];
+      touchJoystickP2.active = true;
+      touchJoystickP2.id = t.identifier;
+      var rect = baseP2.getBoundingClientRect();
+      touchJoystickP2.cx = rect.left + rect.width / 2;
+      touchJoystickP2.cy = rect.top + rect.height / 2;
+      updateJoystickP2(t.clientX, t.clientY);
+    }, { passive: false });
+
+    zoneP2.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        var t = e.changedTouches[i];
+        if (t.identifier === touchJoystickP2.id) {
+          updateJoystickP2(t.clientX, t.clientY);
+        }
+      }
+    }, { passive: false });
+
+    zoneP2.addEventListener('touchend', function(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchJoystickP2.id) {
+          touchJoystickP2.active = false;
+          touchJoystickP2.dx = 0;
+          touchJoystickP2.dy = 0;
+          knobP2.style.transform = 'translate(-50%, -50%)';
+        }
+      }
+    });
+
+    zoneP2.addEventListener('touchcancel', function() {
+      touchJoystickP2.active = false;
+      touchJoystickP2.dx = 0;
+      touchJoystickP2.dy = 0;
+      knobP2.style.transform = 'translate(-50%, -50%)';
+    });
+
+    // Mouse support for laptop testing (P2 joystick)
+    zoneP2.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      touchJoystickP2.active = true;
+      var rect = baseP2.getBoundingClientRect();
+      touchJoystickP2.cx = rect.left + rect.width / 2;
+      touchJoystickP2.cy = rect.top + rect.height / 2;
+      updateJoystickP2(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (touchJoystickP2.active) {
+        updateJoystickP2(e.clientX, e.clientY);
+      }
+    });
+    document.addEventListener('mouseup', function() {
+      if (touchJoystickP2.active) {
+        touchJoystickP2.active = false;
+        touchJoystickP2.dx = 0;
+        touchJoystickP2.dy = 0;
+        knobP2.style.transform = 'translate(-50%, -50%)';
+      }
+    });
+
+    function updateJoystickP2(tx, ty) {
+      var dx = tx - touchJoystickP2.cx;
+      var dy = ty - touchJoystickP2.cy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxDist) {
+        dx = (dx / dist) * maxDist;
+        dy = (dy / dist) * maxDist;
+      }
+      knobP2.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+      touchJoystickP2.dx = dx / maxDist;
+      touchJoystickP2.dy = dy / maxDist;
+    }
+  }
+
+  // --- P2 Attack Buttons ---
+  var btnsP2 = document.querySelectorAll('.touch-btn-p2');
+  for (var b2 = 0; b2 < btnsP2.length; b2++) {
+    (function(btn) {
+      var attack = btn.getAttribute('data-attack');
+      btn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        touchAttacksP2[attack] = true;
+        btn.classList.add('pressed');
+      }, { passive: false });
+      btn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        touchAttacksP2[attack] = false;
+        btn.classList.remove('pressed');
+      });
+      btn.addEventListener('touchcancel', function() {
+        touchAttacksP2[attack] = false;
+        btn.classList.remove('pressed');
+      });
+      // Mouse support for laptop testing
+      btn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        touchAttacksP2[attack] = true;
+        btn.classList.add('pressed');
+      });
+      btn.addEventListener('mouseup', function(e) {
+        touchAttacksP2[attack] = false;
+        btn.classList.remove('pressed');
+      });
+      btn.addEventListener('mouseleave', function() {
+        touchAttacksP2[attack] = false;
+        btn.classList.remove('pressed');
+      });
+    })(btnsP2[b2]);
   }
 }
 
@@ -639,225 +885,6 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initTouchControls);
 } else {
   initTouchControls();
-}
-</script>
-
-<!-- AUDIO SYSTEM -->
-<div id="audio-toggle" style="position:fixed;top:10px;right:10px;z-index:9999;cursor:pointer;background:rgba(0,0,0,0.6);border:1px solid #555;border-radius:8px;padding:6px 12px;color:white;font-size:14px;user-select:none;-webkit-user-select:none;" onclick="toggleAudio()">🔊</div>
-
-<script>
-// ============================================================
-// AUDIO SYSTEM — Procedural chiptune music + synth SFX
-// Uses Web Audio API (no external files needed)
-// ============================================================
-var audioCtx = null;
-var audioMuted = false;
-var bgMusicGain = null;
-var bgMusicPlaying = false;
-var masterGain = null;
-
-function initAudio() {
-  if (audioCtx) return;
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.3;
-    masterGain.connect(audioCtx.destination);
-  } catch(e) {
-    console.log('Audio not supported');
-  }
-}
-
-function toggleAudio() {
-  audioMuted = !audioMuted;
-  document.getElementById('audio-toggle').textContent = audioMuted ? '🔇' : '🔊';
-  if (masterGain) {
-    masterGain.gain.value = audioMuted ? 0 : 0.3;
-  }
-  if (!audioMuted && !bgMusicPlaying) {
-    initAudio();
-    startBgMusic();
-  }
-}
-
-// Ensure audio starts on first user interaction
-function ensureAudio() {
-  if (!audioCtx) {
-    initAudio();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-document.addEventListener('click', ensureAudio, { once: false });
-document.addEventListener('touchstart', ensureAudio, { once: false });
-document.addEventListener('keydown', ensureAudio, { once: false });
-
-// ============================================================
-// BACKGROUND MUSIC — Chiptune Pokémon-style melody
-// ============================================================
-function startBgMusic() {
-  if (!audioCtx || bgMusicPlaying || audioMuted) return;
-  bgMusicPlaying = true;
-
-  bgMusicGain = audioCtx.createGain();
-  bgMusicGain.gain.value = 0.12;
-  bgMusicGain.connect(masterGain);
-
-  // Pokémon-style melody notes (frequency in Hz)
-  var C4=262, D4=294, E4=330, F4=349, G4=392, A4=440, B4=494;
-  var C5=523, D5=587, E5=659, F5=698, G5=784;
-
-  // Two-part melody that loops
-  var melody = [
-    E4, E4, 0, E4, 0, C4, E4, 0, G4, 0, 0, 0, G4/2, 0, 0, 0,
-    C4, 0, 0, G4/2, 0, 0, E4/2*3, 0, 0, A4/2*3, 0, B4/2*3, 0, A4/2*3+20, A4/2*3, 0,
-    G4/2, E4, G4, A4, 0, F4, G4, 0, E4, 0, C4, D4, B4/2*3, 0, 0, 0,
-    C4, 0, 0, G4/2, 0, 0, E4/2*3, 0, 0, A4/2*3, 0, B4/2*3, 0, A4/2*3+20, A4/2*3, 0,
-  ];
-
-  var bass = [
-    C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0, C4/2, 0, G4/4*3, 0,
-    F4/2, 0, C4/2, 0, F4/2, 0, C4/2, 0, G4/2, 0, D4/2, 0, G4/2, 0, D4/2, 0,
-    A4/4*3, 0, E4/2, 0, A4/4*3, 0, E4/2, 0, G4/4*3, 0, D4/2, 0, G4/4*3, 0, D4/2, 0,
-    F4/2, 0, C4/2, 0, F4/2, 0, C4/2, 0, G4/2, 0, D4/2, 0, G4/2, 0, D4/2, 0,
-  ];
-
-  var bpm = 160;
-  var noteLen = 60 / bpm / 2; // 16th notes
-  var loopLen = melody.length * noteLen;
-
-  function scheduleLoop(startTime) {
-    for (var i = 0; i < melody.length; i++) {
-      var t = startTime + i * noteLen;
-      // Melody (square wave)
-      if (melody[i] > 0) {
-        playNote(melody[i], t, noteLen * 0.8, 'square', 0.08, bgMusicGain);
-      }
-      // Bass (triangle wave)
-      if (bass[i % bass.length] > 0) {
-        playNote(bass[i % bass.length], t, noteLen * 0.9, 'triangle', 0.1, bgMusicGain);
-      }
-    }
-    // Schedule next loop
-    setTimeout(function() {
-      if (bgMusicPlaying && !audioMuted) {
-        scheduleLoop(startTime + loopLen);
-      }
-    }, (loopLen - 0.5) * 1000);
-  }
-
-  scheduleLoop(audioCtx.currentTime + 0.1);
-}
-
-function stopBgMusic() {
-  bgMusicPlaying = false;
-}
-
-function playNote(freq, time, duration, type, vol, dest) {
-  if (!audioCtx) return;
-  var osc = audioCtx.createOscillator();
-  var gain = audioCtx.createGain();
-  osc.type = type || 'square';
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(vol || 0.08, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-  osc.connect(gain);
-  gain.connect(dest || masterGain);
-  osc.start(time);
-  osc.stop(time + duration + 0.05);
-}
-
-// ============================================================
-// SOUND EFFECTS — Synthesized attack & impact sounds
-// ============================================================
-function playSfx(type) {
-  if (!audioCtx || audioMuted) return;
-  var now = audioCtx.currentTime;
-
-  switch(type) {
-    case 'quick':
-      // Short pew
-      sweepNote(800, 400, 0.08, 'square', 0.15);
-      break;
-    case 'special':
-      // Laser zap
-      sweepNote(600, 200, 0.15, 'sawtooth', 0.1);
-      sweepNote(900, 300, 0.12, 'square', 0.06);
-      break;
-    case 'ultimate':
-      // Big boom
-      sweepNote(300, 60, 0.3, 'sawtooth', 0.15);
-      sweepNote(150, 30, 0.4, 'triangle', 0.12);
-      noiseHit(0.2, 0.1);
-      break;
-    case 'ultra':
-      // Epic power-up
-      sweepNote(200, 800, 0.3, 'square', 0.1);
-      sweepNote(300, 1200, 0.4, 'sawtooth', 0.06);
-      sweepNote(100, 50, 0.5, 'triangle', 0.08);
-      break;
-    case 'hit':
-      // Impact
-      sweepNote(400, 100, 0.06, 'square', 0.12);
-      noiseHit(0.04, 0.08);
-      break;
-    case 'dodge':
-      // Whoosh
-      sweepNote(300, 600, 0.1, 'sine', 0.08);
-      break;
-    case 'ko':
-      // Defeat
-      sweepNote(500, 100, 0.15, 'square', 0.12);
-      setTimeout(function() { sweepNote(400, 80, 0.15, 'square', 0.1); }, 150);
-      setTimeout(function() { sweepNote(200, 50, 0.3, 'sawtooth', 0.1); }, 300);
-      break;
-    case 'levelup':
-      // Victory jingle
-      sweepNote(523, 523, 0.1, 'square', 0.1);
-      setTimeout(function() { sweepNote(659, 659, 0.1, 'square', 0.1); }, 100);
-      setTimeout(function() { sweepNote(784, 784, 0.1, 'square', 0.1); }, 200);
-      setTimeout(function() { sweepNote(1047, 1047, 0.2, 'square', 0.12); }, 300);
-      break;
-    case 'menuclick':
-      sweepNote(800, 1000, 0.05, 'square', 0.06);
-      break;
-  }
-}
-
-function sweepNote(startFreq, endFreq, duration, type, vol) {
-  if (!audioCtx) return;
-  var now = audioCtx.currentTime;
-  var osc = audioCtx.createOscillator();
-  var gain = audioCtx.createGain();
-  osc.type = type || 'square';
-  osc.frequency.setValueAtTime(startFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(endFreq, 20), now + duration);
-  gain.gain.setValueAtTime(vol || 0.1, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start(now);
-  osc.stop(now + duration + 0.05);
-}
-
-function noiseHit(duration, vol) {
-  if (!audioCtx) return;
-  var now = audioCtx.currentTime;
-  var bufferSize = audioCtx.sampleRate * duration;
-  var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  var data = buffer.getChannelData(0);
-  for (var i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-  }
-  var noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-  var gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(vol || 0.1, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  noise.connect(gain);
-  gain.connect(masterGain);
-  noise.start(now);
 }
 </script>
 
@@ -976,6 +1003,22 @@ const POKEMON_DATA = {
       special: { name: 'Play Rough',   damage: 46, range: 200, cooldown: 1300, color: '#f8a5c2', size: 20, speed: 6, lifetime: 55, piercing: false },
       ultimate:{ name: 'Wild Charge',  damage: 85, range: 250, cooldown: 4000, color: '#fab1a0', size: 30, speed: 5.5, lifetime: 65, aoe: 55 },
       ultra:   { name: 'Zoomies',      damage: '12×25', cooldown: 5500, color: '#ffeaa7' },
+    },
+    strongVs: 'ghost', weakVs: 'fire',
+  },
+  mcelli: {
+    name: 'McElli',
+    type: 'fairy',
+    dexNum: 10225,  // Galarian Rapidash — the pink unicorn!
+    color: '#ff69b4',
+    colorLight: '#ffb6c1',
+    hp: 370,
+    speed: 4.6,
+    attacks: {
+      quick:   { name: 'Sparkle Kiss',  damage: 16, range: 75,  cooldown: 330,  color: '#ff69b4', size: 9,  speed: 9.5, lifetime: 32 },
+      special: { name: 'Rainbow Beam',  damage: 48, range: 230, cooldown: 1350, color: '#ff85c8', size: 18, speed: 7, lifetime: 60, piercing: true },
+      ultimate:{ name: 'Fairy Dance',   damage: 88, range: 250, cooldown: 4000, color: '#ffb6c1', size: 32, speed: 5, lifetime: 70, aoe: 60 },
+      ultra:   { name: 'Glitter Storm',  damage: '10×28', cooldown: 5800, color: '#ff69b4' },
     },
     strongVs: 'ghost', weakVs: 'fire',
   },
@@ -1108,6 +1151,12 @@ document.addEventListener('keydown', e => {
 
   // (Space-to-restart disabled)
 
+  // Debug: press T to toggle touch controls on non-touch devices
+  if (e.key.toLowerCase() === 't' && gameState === 'playing') {
+    touchEnabled = !touchEnabled;
+    showTouchControls(touchEnabled);
+  }
+
   // Secret cheat code: 123456789 = Eric wins
   if (gameState === 'playing') {
     cheatBuffer += e.key;
@@ -1156,7 +1205,7 @@ function buildMenu() {
       </div>
     `;
     function handleCardSelect() {
-      if (selectedMode === '2p' || selectedMode === 'coop') {
+      if (selectedMode === '2p' || selectedMode === 'coop' || selectedMode === 'story2p') {
         handleTwoPlayerSelect(card, id);
       } else {
         document.querySelectorAll('.pokemon-card').forEach(c => {
@@ -1254,34 +1303,49 @@ function buildMenu() {
       // Sync story input with p1 name
       const storyInp = document.getElementById('story-name-input');
       if (storyInp) storyInp.value = localStorage.getItem('pokemon_p1_name') || '';
+      const storyP2Inp = document.getElementById('story-p2-name-input');
       const p2Inp = document.getElementById('p2-name-input');
       if (p2Inp) p2Inp.value = localStorage.getItem('pokemon_p2_name') || '';
+      // Restore JS variables from saved names
+      p1Name = localStorage.getItem('pokemon_p1_name') || '';
+      p2Name = localStorage.getItem('pokemon_p2_name') || '';
       document.getElementById('start-btn').disabled = true;
       const is2p = selectedMode === '2p';
       const isCoop = selectedMode === 'coop';
       const isStory = selectedMode === 'story';
+      const isStory2p = selectedMode === 'story2p';
       const isTraining = selectedMode === 'training';
       const needsP2 = is2p || isCoop;
       // Toggle AI options visibility
-      document.getElementById('ai-options').style.display = (is2p || isStory || isTraining) ? 'none' : '';
+      document.getElementById('ai-options').style.display = (is2p || isStory || isStory2p || isTraining) ? 'none' : '';
       document.getElementById('pvp-options').style.display = needsP2 ? 'block' : 'none';
-      document.getElementById('story-options').style.display = isStory ? 'block' : 'none';
+      document.getElementById('story-options').style.display = (isStory || isStory2p) ? 'block' : 'none';
       document.getElementById('training-options').style.display = isTraining ? 'block' : 'none';
+      // Show/hide P2 section within story options
+      const storyP2Section = document.getElementById('story-p2-section');
+      if (storyP2Section) storyP2Section.style.display = isStory2p ? 'block' : 'none';
+      // Pre-fill 2P story names with Eric and Henry
+      if (isStory2p) {
+        if (storyInp) { storyInp.value = 'Eric'; p1Name = 'Eric'; }
+        if (storyP2Inp) { storyP2Inp.value = 'Henry'; p2Name = 'Henry'; }
+      }
       // Toggle controls info
-      document.getElementById('controls-1p').style.display = needsP2 ? 'none' : '';
-      document.getElementById('controls-2p').style.display = needsP2 ? '' : 'none';
+      document.getElementById('controls-1p').style.display = (needsP2 || isStory2p) ? 'none' : '';
+      document.getElementById('controls-2p').style.display = (needsP2 || isStory2p) ? '' : 'none';
       // Update label
       if (isTraining) {
         document.getElementById('select-label').textContent = 'Pick a Pokémon to practice with!';
       } else if (isStory) {
         document.getElementById('select-label').textContent = 'Choose your fighter for Story Mode!';
+      } else if (isStory2p) {
+        document.getElementById('select-label').textContent = 'Eric & Henry: Pick your fighters!';
       } else if (needsP2) {
         document.getElementById('select-label').textContent = 'P1: Click your fighter, then P2: Click yours!';
       } else {
         document.getElementById('select-label').textContent = 'Choose your fighter!';
       }
       if (needsP2) renderLeaderboard();
-      if (isStory) renderStoryLeaderboard();
+      if (isStory || isStory2p) renderStoryLeaderboard();
       updateOpponentLabels();
     });
   });
@@ -1340,14 +1404,26 @@ function buildMenu() {
 
 function setupStoryNameButtons() {
   const storyInput = document.getElementById('story-name-input');
+  const storyP2Input = document.getElementById('story-p2-name-input');
   // Restore saved name (use P1 name as default for story)
   const savedName = localStorage.getItem('pokemon_p1_name') || '';
   if (savedName) { storyInput.value = savedName; p1Name = savedName; }
+  updateStartBtnState();
   storyInput.addEventListener('input', (e) => {
     p1Name = e.target.value.trim();
     localStorage.setItem('pokemon_p1_name', p1Name);
     updateStartBtnState();
   });
+  // P2 name input for 2P story
+  if (storyP2Input) {
+    const savedP2Name = localStorage.getItem('pokemon_p2_name') || '';
+    if (savedP2Name) { storyP2Input.value = savedP2Name; p2Name = savedP2Name; }
+    storyP2Input.addEventListener('input', (e) => {
+      p2Name = e.target.value.trim();
+      localStorage.setItem('pokemon_p2_name', p2Name);
+      updateStartBtnState();
+    });
+  }
   document.querySelectorAll('#story-difficulty-select .diff-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#story-difficulty-select .diff-btn').forEach(b => b.classList.remove('selected'));
@@ -1430,9 +1506,10 @@ function renderLeaderboard() {
   const names = ['Henry', 'Eric', 'Papa'];
   const pokemonNames = Object.keys(POKEMON_DATA);
 
-  let html = '<thead><tr><th>Player</th><th>Wins</th><th>Draws</th><th>Fav Pokémon</th></tr></thead><tbody>';
+  let html = '<thead><tr><th>Player</th><th>Wins</th><th>Draws</th><th>Games</th><th>Win %</th><th>Fav Pokémon</th></tr></thead><tbody>';
   for (const name of names) {
     const d = lb[name] || { wins: 0, games: 0, draws: 0, pokemon: {} };
+    const pct = d.games > 0 ? Math.round(d.wins / d.games * 100) : 0;
     // Find most picked pokemon
     let fav = '-';
     let maxPicks = 0;
@@ -1446,9 +1523,14 @@ function renderLeaderboard() {
       <td><strong>${name}</strong></td>
       <td>${d.wins}</td>
       <td>${d.draws || 0}</td>
+      <td>${d.games}</td>
+      <td>${pct}%</td>
       <td>${fav}</td>
     </tr>`;
   }
+  // Total row
+  const total = names.reduce((sum, n) => sum + ((lb[n] && lb[n].games) || 0), 0) / 2; // each game counted for 2 players
+  html += `<tr style="border-top:2px solid #444"><td colspan="3"><strong>Total Games</strong></td><td colspan="3"><strong>${Math.round(total)}</strong></td></tr>`;
   html += '</tbody>';
   table.innerHTML = html;
 }
@@ -1465,13 +1547,14 @@ function render1PLeaderboard() {
   const table = document.getElementById('leaderboard-1p-table');
   if (!table) return;
 
-  let html = '<thead><tr style="border-bottom:1px solid #444"><th style="color:#e94560;padding:4px 8px;text-align:left">Pokémon</th><th style="color:#e94560;padding:4px 8px">Wins</th><th style="color:#e94560;padding:4px 8px">Best Diff</th></tr></thead><tbody>';
+  let html = '<thead><tr style="border-bottom:1px solid #444"><th style="color:#e94560;padding:4px 8px;text-align:left">Pokémon</th><th style="color:#e94560;padding:4px 8px">W</th><th style="color:#e94560;padding:4px 8px">L</th><th style="color:#e94560;padding:4px 8px">Games</th><th style="color:#e94560;padding:4px 8px">Win%</th><th style="color:#e94560;padding:4px 8px">Best Diff</th></tr></thead><tbody>';
 
-  let hasData = false;
+  let totalGames = 0;
   for (const [pid, data] of Object.entries(POKEMON_DATA)) {
     const d = lb[pid];
     if (!d || d.games === 0) continue;
-    hasData = true;
+    totalGames += d.games;
+    const pct = d.games > 0 ? Math.round(d.wins / d.games * 100) : 0;
     // Find hardest difficulty they won on
     let bestDiff = '-';
     const diffOrder = ['hard', 'medium', 'easy', 'baby'];
@@ -1481,11 +1564,16 @@ function render1PLeaderboard() {
     html += `<tr style="border-bottom:1px solid #222">
       <td style="padding:3px 8px"><strong>${data.name}</strong></td>
       <td style="padding:3px 8px;text-align:center">${d.wins}</td>
+      <td style="padding:3px 8px;text-align:center">${d.losses}</td>
+      <td style="padding:3px 8px;text-align:center">${d.games}</td>
+      <td style="padding:3px 8px;text-align:center">${pct}%</td>
       <td style="padding:3px 8px;text-align:center">${bestDiff}</td>
     </tr>`;
   }
-  if (!hasData) {
-    html += '<tr><td colspan="3" style="padding:8px;text-align:center;color:#666">No games played yet</td></tr>';
+  if (totalGames === 0) {
+    html += '<tr><td colspan="6" style="padding:8px;text-align:center;color:#666">No games played yet</td></tr>';
+  } else {
+    html += `<tr style="border-top:2px solid #444"><td colspan="3" style="padding:3px 8px"><strong>Total</strong></td><td colspan="3" style="padding:3px 8px"><strong>${totalGames} games</strong></td></tr>`;
   }
   html += '</tbody>';
   table.innerHTML = html;
@@ -1499,6 +1587,7 @@ function setupNameButtons() {
   const savedP2 = localStorage.getItem('pokemon_p2_name') || '';
   if (savedP1) { p1Input.value = savedP1; p1Name = savedP1; }
   if (savedP2) { p2Input.value = savedP2; p2Name = savedP2; }
+  updateStartBtnState();
   p1Input.addEventListener('input', (e) => {
     p1Name = e.target.value.trim();
     localStorage.setItem('pokemon_p1_name', p1Name);
@@ -1524,6 +1613,8 @@ function updateStartBtnState() {
     document.getElementById('start-btn').disabled = !(selectedPokemon && selectedPokemonP2 && p1Name && p2Name);
   } else if (selectedMode === 'story') {
     document.getElementById('start-btn').disabled = !(selectedPokemon && p1Name);
+  } else if (selectedMode === 'story2p') {
+    document.getElementById('start-btn').disabled = !(selectedPokemon && selectedPokemonP2 && p1Name && p2Name);
   } else {
     document.getElementById('start-btn').disabled = !selectedPokemon;
   }
@@ -1634,8 +1725,6 @@ function startGame() {
   document.getElementById('controls-hud').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   gameState = 'playing';
-  ensureAudio();
-  if (!bgMusicPlaying) startBgMusic();
   if (touchEnabled) showTouchControls(true);
   projectiles = [];
   particles = [];
@@ -1739,14 +1828,7 @@ function startGame() {
   }
 
   // === STORY MODE ===
-  if (selectedMode === 'story') {
-    // Hide game canvas during story interstitial — actuallyStartStoryLevel will show it
-    document.getElementById('game-canvas').style.display = 'none';
-    document.getElementById('ui-overlay').style.display = 'none';
-    document.getElementById('hud').style.display = 'none';
-    document.getElementById('controls-hud').style.display = 'none';
-    if (touchEnabled) showTouchControls(false);
-    gameState = 'menu'; // Don't start gameplay yet
+  if (selectedMode === 'story' || selectedMode === 'story2p') {
     storyLevel = 1;
     storyLives = 3;
     storyScore = 0;
@@ -1850,127 +1932,76 @@ function updateTrainingHUD() {
 
 // Story mode level definitions
 const STORY_LEVELS = [
-  { name: 'The Beginning', enemies: 1, baseDiff: 'baby', desc: 'A wild Pokémon appears!',
-    story: '🌅 Your Pokémon wakes up from a nap. "What a beautiful day to pick fights with strangers!" it thinks. A rustling in the bushes catches its attention...' },
-  { name: 'Double Trouble', enemies: 2, baseDiff: 'baby', desc: 'Two challengers step forward!',
-    story: '😤 Word spreads fast. "Did you hear? Some Pokémon just beat up Gerald!" Two angry fighters appear. "That was our friend Gerald! He owed us lunch money!"' },
-  { name: 'Rising Heat', enemies: 2, baseDiff: 'easy', desc: 'The opponents get smarter...',
-    story: '📱 A news alert pops up: "BREAKING: Local Pokémon goes on unhinged winning streak. Experts say they might be slightly too powerful." Your Pokémon flexes for the camera.' },
-  { name: 'The Gauntlet', enemies: 3, baseDiff: 'easy', desc: 'Three against one!',
-    story: '🍕 Your Pokémon stops at a pizza shop. Three tough-looking Pokémon walk in. "Hey, that\'s the last slice of pepperoni!" Your Pokémon stuffs it in its mouth. "...worth it."' },
-  { name: 'Turning Point', enemies: 3, baseDiff: 'medium', desc: 'The battles intensify!',
-    story: '🎵 Your Pokémon puts on dramatic battle music. "Every hero needs a training montage!" it says, doing push-ups. It does exactly two push-ups and declares itself ready.' },
-  { name: 'No Mercy', enemies: 4, baseDiff: 'medium', desc: 'They keep coming!',
-    story: '📋 A Pokémon in a suit approaches with a clipboard. "We\'ve received 47 complaints about you. Please stop. Actually, never mind — four more challengers are here." Your Pokémon cracks its knuckles.' },
-  { name: 'Elite Four', enemies: 4, baseDiff: 'hard', desc: 'Only the strongest survive!',
-    story: '👑 "Welcome to the Elite Four!" announces a voice. Your Pokémon looks around nervously. "Wait, I have to fight FOUR elites? I thought this was a buffet invitation!"' },
-  { name: 'Champion\'s Gate', enemies: 5, baseDiff: 'hard', desc: 'The final stretch!',
-    story: '🚪 A massive golden gate looms ahead. A sign reads: "Champion\'s Gate — No crying, no rage-quitting, no blaming lag." Your Pokémon takes a deep breath. "I was born for this. Also I\'m terrified."' },
-  { name: 'Legendary Swarm', enemies: 6, baseDiff: 'hard', desc: 'A legendary battle unfolds!',
-    story: '🌩️ The sky darkens. Six legendary Pokémon descend from the clouds. Your Pokémon looks up and whispers: "I should\'ve stayed in bed today." Then smiles. "...but where\'s the fun in that?"' },
-  { name: 'Final Boss', enemies: 1, baseDiff: 'hard', boss: true, desc: 'The ultimate champion awaits!',
-    story: '🏆 A single figure stands in the arena. The crowd goes silent. The champion speaks: "I\'ve trained for 10,000 hours." Your Pokémon responds: "Cool. I had a really good breakfast." THE FINAL BATTLE BEGINS!' },
+  { name: 'The Beginning', enemies: 1, baseDiff: 'baby',
+    desc: 'A wild Pokémon appears!',
+    desc2p: 'Eric & Henry spot their first wild Pokémon!' },
+  { name: 'Double Trouble', enemies: 2, baseDiff: 'baby',
+    desc: 'Two challengers step forward!',
+    desc2p: '"I\'ll take left, you take right!" — Eric' },
+  { name: 'Rising Heat', enemies: 2, baseDiff: 'easy',
+    desc: 'The opponents get smarter...',
+    desc2p: 'Henry: "They\'re getting smarter..." Eric: "Good, I was bored!"' },
+  { name: 'The Gauntlet', enemies: 3, baseDiff: 'easy',
+    desc: 'Three against one!',
+    desc2p: 'Three vs two! Eric & Henry fight back to back!' },
+  { name: 'Turning Point', enemies: 3, baseDiff: 'medium',
+    desc: 'The battles intensify!',
+    desc2p: 'Eric: "Cover me!" Henry: "Always do!"' },
+  { name: 'No Mercy', enemies: 4, baseDiff: 'medium',
+    desc: 'They keep coming!',
+    desc2p: 'They keep coming! Eric & Henry refuse to give up!' },
+  { name: 'Elite Four', enemies: 4, baseDiff: 'hard',
+    desc: 'Only the strongest survive!',
+    desc2p: 'Eric: "This is it." Henry: "Together."' },
+  { name: 'Champion\'s Gate', enemies: 5, baseDiff: 'hard',
+    desc: 'The final stretch!',
+    desc2p: 'The final stretch — Eric & Henry are unstoppable!' },
+  { name: 'Legendary Swarm', enemies: 6, baseDiff: 'hard',
+    desc: 'A legendary battle unfolds!',
+    desc2p: 'A legendary horde! "HOLD THE LINE!" — Henry' },
+  { name: 'Final Boss', enemies: 1, baseDiff: 'hard', boss: true,
+    desc: 'The ultimate champion awaits!',
+    desc2p: 'The ultimate champion awaits Eric & Henry!' },
 ];
 
 function startStoryLevel() {
   const level = STORY_LEVELS[storyLevel - 1];
   if (!level) return;
 
-  // Show story interstitial if there's story text
-  if (level.story) {
-    showStoryInterstitial(level, function() {
-      actuallyStartStoryLevel(level);
-    });
-  } else {
-    actuallyStartStoryLevel(level);
-  }
-}
-
-function showStoryInterstitial(level, onDone) {
-  // Create or reuse story overlay
-  var overlay = document.getElementById('story-interstitial');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'story-interstitial';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;cursor:pointer;opacity:0;transition:opacity 0.5s;';
-    document.body.appendChild(overlay);
-  }
-  overlay.style.display = 'flex';
-  overlay.style.opacity = '0';
-
-  var playerPokeName = POKEMON_DATA[selectedPokemon] ? POKEMON_DATA[selectedPokemon].name : selectedPokemon;
-  var storyText = level.story.replace(/Your Pokémon/g, playerPokeName);
-
-  overlay.innerHTML = '<div style="text-align:center;max-width:700px;">' +
-    '<div style="font-size:14px;color:#f39c12;letter-spacing:3px;margin-bottom:12px;">📜 CHAPTER ' + storyLevel + '</div>' +
-    '<div style="font-size:28px;font-weight:bold;color:#e94560;margin-bottom:20px;">' + level.name + '</div>' +
-    '<div style="font-size:18px;color:#eee;line-height:1.7;margin-bottom:30px;font-style:italic;">' + storyText + '</div>' +
-    '<div style="font-size:13px;color:#666;animation:pulse 1.5s infinite;">Tap or press any key to continue...</div>' +
-    '</div>';
-
-  // Add pulse animation if not already present
-  if (!document.getElementById('story-pulse-style')) {
-    var style = document.createElement('style');
-    style.id = 'story-pulse-style';
-    style.textContent = '@keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }';
-    document.head.appendChild(style);
-  }
-
-  // Fade in
-  setTimeout(function() { overlay.style.opacity = '1'; }, 50);
-
-
-  var dismissed = false;
-  function dismiss() {
-    if (dismissed) return;
-    dismissed = true;
-    overlay.style.opacity = '0';
-    setTimeout(function() {
-      overlay.style.display = 'none';
-      onDone();
-    }, 400);
-  }
-
-  // Tap or key to skip
-  overlay.onclick = dismiss;
-  function keyDismiss(e) {
-    dismiss();
-    document.removeEventListener('keydown', keyDismiss);
-  }
-  document.addEventListener('keydown', keyDismiss);
-}
-
-function actuallyStartStoryLevel(level) {
-
+  // Set up the level first (fighters visible but frozen)
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('game-over-screen').style.display = 'none';
-  document.getElementById('game-canvas').style.display = '';
-  document.getElementById('ui-overlay').style.display = '';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('controls-hud').style.display = 'flex';
-  gameState = 'playing';
+  gameState = 'frozen'; // Frozen: renders but doesn't update
   projectiles = [];
   particles = [];
   damageNumbers = [];
   screenFlashes = [];
   gameTime = 0;
-  player2 = null;
 
-  player = createFighter(selectedPokemon, ARENA_W / 2, ARENA_H - 100, true);
+  if (selectedMode === 'story2p') {
+    player = createFighter(selectedPokemon, ARENA_W / 3, ARENA_H - 100, true);
+    player2 = createFighter(selectedPokemonP2, (ARENA_W * 2) / 3, ARENA_H - 100, true);
+    player2.isPlayer = true;
+    player2.isPlayer2 = true;
+    if (touchEnabled) showTouchControls(true);
+  } else {
+    player = createFighter(selectedPokemon, ARENA_W / 2, ARENA_H - 100, true);
+    player2 = null;
+  }
   enemies = [];
 
   // Scale level difficulty based on chosen story difficulty
   const diffScale = ['baby', 'easy', 'medium', 'hard'];
   const baseIdx = diffScale.indexOf(level.baseDiff);
   const chosenIdx = diffScale.indexOf(selectedDifficulty);
-  // Shift: chosen medium=0 offset, baby=-2, easy=-1, hard=+1
-  const offset = chosenIdx - 2; // medium is the baseline (index 2)
+  const offset = chosenIdx - 2;
   const scaledIdx = Math.max(0, Math.min(diffScale.length - 1, baseIdx + offset));
   const effectiveDiff = diffScale[scaledIdx];
   const diff = DIFFICULTY[effectiveDiff];
   const allPokemonIds = Object.keys(POKEMON_DATA).filter(id => id !== selectedPokemon);
 
-  // Shuffle enemies
   const shuffled = shuffleArray(allPokemonIds);
 
   for (let i = 0; i < level.enemies; i++) {
@@ -1983,7 +2014,6 @@ function actuallyStartStoryLevel(level) {
       e.hp = Math.round(e.maxHp * diff.hpMult);
       e.maxHp = e.hp;
     }
-    // Boss mode: 3x HP and bigger
     if (level.boss) {
       e.hp = Math.round(e.maxHp * 3);
       e.maxHp = e.hp;
@@ -1994,6 +2024,71 @@ function actuallyStartStoryLevel(level) {
 
   buildHUD();
   updateStoryHUD();
+
+  // Show story interstitial overlay — game unfreezes on click
+  showStoryInterstitial(level, function() {
+    gameState = 'playing';
+  });
+}
+
+function showStoryInterstitial(level, onContinue) {
+  // Remove any existing interstitial
+  let overlay = document.getElementById('story-interstitial');
+  if (overlay) overlay.remove();
+
+  const is2p = selectedMode === 'story2p';
+  const desc = is2p ? (level.desc2p || level.desc) : level.desc;
+  const playerNames = is2p ? (p1Name || 'Eric') + ' & ' + (p2Name || 'Henry') : (p1Name || 'Player');
+  const bossTag = level.boss ? '<div style="color:#e74c3c;font-size:28px;margin-bottom:8px;text-shadow:0 0 20px #e74c3c">⚠️ BOSS FIGHT ⚠️</div>' : '';
+
+  overlay = document.createElement('div');
+  overlay.id = 'story-interstitial';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;text-align:center;color:white;cursor:pointer;animation:fadeIn 0.4s ease;';
+  overlay.innerHTML =
+    '<div style="max-width:600px;padding:40px">' +
+      '<div style="font-size:16px;color:#f39c12;margin-bottom:8px;letter-spacing:2px">📜 ' + playerNames + '\'s Adventure</div>' +
+      '<div style="font-size:14px;color:#888;margin-bottom:20px">Level ' + storyLevel + ' of ' + STORY_LEVELS.length + '</div>' +
+      bossTag +
+      '<div style="font-size:36px;font-weight:bold;margin-bottom:16px;color:#fff;text-shadow:0 0 15px rgba(243,156,18,0.5)">' + level.name + '</div>' +
+      '<div style="font-size:20px;color:#ddd;margin-bottom:32px;line-height:1.5;font-style:italic">"' + desc + '"</div>' +
+      '<div style="font-size:18px;color:#f39c12;margin-bottom:8px">Enemies: ' + level.enemies + (level.boss ? ' (BOSS)' : '') + '</div>' +
+      '<div style="font-size:15px;color:#888;margin-top:30px;animation:pulse 1.5s ease-in-out infinite">👆 Tap or Click to Fight! 👆</div>' +
+    '</div>';
+
+  // Add pulse animation if not already defined
+  if (!document.getElementById('story-interstitial-style')) {
+    const style = document.createElement('style');
+    style.id = 'story-interstitial-style';
+    style.textContent = '@keyframes pulse { 0%,100% { opacity:0.5; transform:scale(1); } 50% { opacity:1; transform:scale(1.05); } } @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }';
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(overlay);
+
+  // Hide story HUD while interstitial is showing (avoid duplicate info)
+  const storyHud = document.getElementById('story-hud');
+  if (storyHud) storyHud.style.display = 'none';
+
+  function handleClick() {
+    overlay.removeEventListener('click', handleClick);
+    overlay.removeEventListener('touchend', handleTouchEnd);
+    document.removeEventListener('keydown', handleKey);
+    overlay.remove();
+    // Restore story HUD
+    const storyHud = document.getElementById('story-hud');
+    if (storyHud) storyHud.style.display = '';
+    onContinue();
+  }
+  function handleTouchEnd(e) {
+    e.preventDefault();
+    handleClick();
+  }
+  function handleKey() {
+    handleClick();
+  }
+  overlay.addEventListener('click', handleClick);
+  overlay.addEventListener('touchend', handleTouchEnd);
+  document.addEventListener('keydown', handleKey);
 }
 
 function updateStoryHUD() {
@@ -2001,13 +2096,16 @@ function updateStoryHUD() {
   if (!storyHud) {
     storyHud = document.createElement('div');
     storyHud.id = 'story-hud';
-    storyHud.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,0.8);border:2px solid #f39c12;border-radius:10px;padding:8px 20px;color:white;text-align:center;font-size:14px;pointer-events:none;';
+    storyHud.style.cssText = 'position:fixed;top:70px;right:10px;z-index:100;background:rgba(0,0,0,0.8);border:2px solid #f39c12;border-radius:10px;padding:6px 14px;color:white;text-align:right;font-size:12px;pointer-events:none;max-width:250px;';
     document.body.appendChild(storyHud);
   }
   const level = STORY_LEVELS[storyLevel - 1];
   const hearts = '❤️'.repeat(storyLives) + '🖤'.repeat(3 - storyLives);
   const elapsed = formatTime(Date.now() - storyStartTime);
-  storyHud.innerHTML = `<strong>📜 ${p1Name || 'Player'} — Level ${storyLevel}/${STORY_LEVELS.length}: ${(level && level.name) || ''}</strong><br>${hearts} &nbsp;|&nbsp; Score: <strong>${storyScore}</strong> &nbsp;|&nbsp; ⏱ ${elapsed}<br><em style="color:#aaa;font-size:12px">${(level && level.desc) || ''}</em>`;
+  const is2p = selectedMode === 'story2p';
+  const playerNames = is2p ? `${p1Name || 'Eric'} & ${p2Name || 'Henry'}` : (p1Name || 'Player');
+  const storyDesc = is2p ? ((level && level.desc2p) || (level && level.desc) || '') : ((level && level.desc) || '');
+  storyHud.innerHTML = `<strong>📜 ${playerNames} — Level ${storyLevel}/${STORY_LEVELS.length}: ${(level && level.name) || ''}</strong><br>${hearts} &nbsp;|&nbsp; Score: <strong>${storyScore}</strong> &nbsp;|&nbsp; ⏱ ${elapsed}<br><em style="color:#aaa;font-size:12px">${storyDesc}</em>`;
   storyHud.style.display = storyActive ? '' : 'none';
 }
 
@@ -2279,7 +2377,6 @@ function fireProjectile(fighter, attackType) {
   if (fighter.cooldowns[attackType] > 0) return;
 
   fighter.cooldowns[attackType] = atk.cooldown;
-  playSfx(attackType);
 
   const dir = { x: fighter.facing.x, y: fighter.facing.y };
   const len = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
@@ -2661,6 +2758,72 @@ function fireUltraAttack(fighter) {
         size: 3 + Math.random() * 5, color: i % 2 === 0 ? '#ffeaa7' : '#fab1a0',
       });
     }
+  } else if (fighter.id === 'mcelli') {
+    // === GLITTER STORM: 10 sparkly hearts rain down on enemies ===
+    const allFighters = getAllFighters().filter(f => {
+      if (f === fighter || !f.alive) return false;
+      if (fighter.isPlayer && !f.isPlayer) return true;
+      if (!fighter.isPlayer && f.isPlayer) return true;
+      return false;
+    });
+    const heartCount = 10;
+    for (let i = 0; i < heartCount; i++) {
+      const target = allFighters.length > 0 ? allFighters[Math.floor(Math.random() * allFighters.length)] : null;
+      const bx = target ? target.x + (Math.random() - 0.5) * 100 : Math.random() * ARENA_W;
+      const by = target ? target.y + (Math.random() - 0.5) * 100 : Math.random() * ARENA_H;
+      const sparkleColors = ['#ff69b4', '#ff85c8', '#ffb6c1', '#ff1493', '#ff91a4'];
+      const proj = {
+        x: bx + (Math.random() - 0.5) * 40,
+        y: -30,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 10 + Math.random() * 4,
+        size: 12 + Math.random() * 6,
+        color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
+        damage: 28,
+        owner: fighter,
+        ownerType: fighter.data.type,
+        lifetime: 65,
+        piercing: false,
+        aoe: 35,
+        attackType: 'ultra',
+        hit: new Set(),
+        trail: [],
+      };
+      setTimeout(() => {
+        if (gameState === 'playing') {
+          projectiles.push(proj);
+          // Pink sparkle trail
+          for (let j = 0; j < 8; j++) {
+            particles.push({
+              x: proj.x + (Math.random() - 0.5) * 20,
+              y: 40,
+              vx: (Math.random() - 0.5) * 3,
+              vy: Math.random() * 2 + 1,
+              life: 15 + Math.random() * 10, maxLife: 25,
+              size: 3 + Math.random() * 4,
+              color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
+            });
+          }
+        }
+      }, i * 100);
+    }
+    // Pink screen flash
+    screenFlashes.push({ life: 22, maxLife: 22, color: 'rgba(255, 105, 180, 0.3)' });
+    shakeTimer = 22;
+    shakeIntensity = 6;
+    // Radial sparkle burst from McElli
+    for (let i = 0; i < 45; i++) {
+      const a = (i / 45) * Math.PI * 2;
+      const sparkleColors2 = ['#ff69b4', '#ffb6c1', '#ff1493', '#ffc0cb', '#ff85c8'];
+      particles.push({
+        x: fighter.x, y: fighter.y,
+        vx: Math.cos(a) * (2 + Math.random() * 5),
+        vy: Math.sin(a) * (2 + Math.random() * 5),
+        life: 22 + Math.random() * 15, maxLife: 37,
+        size: 3 + Math.random() * 5,
+        color: sparkleColors2[Math.floor(Math.random() * sparkleColors2.length)],
+      });
+    }
   }
 }
 
@@ -2877,7 +3040,6 @@ function handleProjectileCollisions() {
       if (dist < f.radius + p.size) {
         // Hit!
         p.hit.add(f);
-        playSfx('hit');
 
         const mult = getTypeMultiplier(p.ownerType, f.data.type);
         const diff = DIFFICULTY[selectedDifficulty];
@@ -2934,7 +3096,6 @@ function handleProjectileCollisions() {
         if (f.hp <= 0) {
           f.hp = 0;
           f.alive = false;
-          playSfx('ko');
           // Death explosion
           spawnHitParticles(f.x, f.y, f.data.color, 40);
           spawnHitParticles(f.x, f.y, '#fff', 20);
@@ -3002,7 +3163,6 @@ function update() {
     if (keys[' '] || keys['Space'] || touchAttacks.dodge) {
       if (player.dodgeCooldown <= 0 && !player.isDodging) {
         player.isDodging = true;
-        playSfx('dodge');
         player.dodgeTimer = 15;
         player.invincibleTimer = 15;
         player.dodgeCooldown = 45;
@@ -3019,6 +3179,11 @@ function update() {
     if (keys['arrowright']) mx += 1;
     if (keys['arrowup'])    my -= 1;
     if (keys['arrowdown'])  my += 1;
+    // P2 Touch joystick input
+    if (touchEnabled && touchJoystickP2.active) {
+      mx += touchJoystickP2.dx;
+      my += touchJoystickP2.dy;
+    }
 
     const speed = player2.data.speed * (player2.isDodging ? 2.5 : 1);
     if (mx !== 0 || my !== 0) {
@@ -3032,14 +3197,14 @@ function update() {
       player2.vy *= 0.8;
     }
 
-    // P2 Attacks: 7=quick, 8=special, 9=ultimate, 0=ultra
-    if (keys['7']) fireProjectile(player2, 'quick');
-    if (keys['8']) fireProjectile(player2, 'special');
-    if (keys['9']) fireProjectile(player2, 'ultimate');
-    if (keys['0']) fireUltraAttack(player2);
+    // P2 Attacks: 7=quick, 8=special, 9=ultimate, 0=ultra (keyboard + touch)
+    if (keys['7'] || touchAttacksP2.quick) fireProjectile(player2, 'quick');
+    if (keys['8'] || touchAttacksP2.special) fireProjectile(player2, 'special');
+    if (keys['9'] || touchAttacksP2.ultimate) fireProjectile(player2, 'ultimate');
+    if (keys['0'] || touchAttacksP2.ultra) fireUltraAttack(player2);
 
-    // P2 Dodge: Enter
-    if (keys['enter']) {
+    // P2 Dodge: Enter (keyboard + touch)
+    if (keys['enter'] || touchAttacksP2.dodge) {
       if (player2.dodgeCooldown <= 0 && !player2.isDodging) {
         player2.isDodging = true;
         player2.dodgeTimer = 15;
@@ -3189,9 +3354,10 @@ function update() {
     } else if (aliveEnemies.length === 0) {
       endGame('coopwin');
     }
-  } else if (selectedMode === 'story' && storyActive) {
+  } else if ((selectedMode === 'story' || selectedMode === 'story2p') && storyActive) {
     const aliveEnemies = enemies.filter(e => e.alive);
-    if (!player.alive) {
+    const allPlayersDead = !player.alive && (!player2 || !player2.alive);
+    if (allPlayersDead) {
       // Lost this level
       storyLives--;
       if (storyLives <= 0) {
@@ -3204,7 +3370,9 @@ function update() {
         gameState = 'gameover';
         const storyHud = document.getElementById('story-hud');
         const hearts = '❤️'.repeat(storyLives) + '🖤'.repeat(3 - storyLives);
-        if (storyHud) storyHud.innerHTML = `<strong style="color:#e74c3c">💀 You lost a life!</strong><br>${hearts}<br><em>Retrying level ${storyLevel}...</em>`;
+        const is2pStory = selectedMode === 'story2p';
+        const names = is2pStory ? `${p1Name || 'Eric'} & ${p2Name || 'Henry'}` : 'You';
+        if (storyHud) storyHud.innerHTML = `<strong style="color:#e74c3c">💀 ${names} lost a life!</strong><br>${hearts}<br><em>Retrying level ${storyLevel}...</em>`;
         setTimeout(() => {
           if (storyActive) startStoryLevel();
         }, 2000);
@@ -3222,20 +3390,15 @@ function update() {
         if (storyHud) storyHud.style.display = 'none';
         endGame('storycomplete');
       } else {
-        // Next level — show story interstitial
+        // Next level after brief celebration
         storyLevel++;
         updateStoryHUD();
         gameState = 'gameover';
         const storyHud = document.getElementById('story-hud');
         if (storyHud) storyHud.innerHTML = `<strong style="color:#2ecc71">✅ Level ${storyLevel - 1} Complete!</strong><br>+${levelBonus} level bonus, +${hpBonus} HP bonus<br><em>Score: ${storyScore}</em>`;
-        playSfx('levelup');
-        // Hide canvas during transition
-        document.getElementById('game-canvas').style.display = 'none';
-        document.getElementById('ui-overlay').style.display = 'none';
-        if (touchEnabled) showTouchControls(false);
-        setTimeout(function() {
+        setTimeout(() => {
           if (storyActive) startStoryLevel();
-        }, 1500);
+        }, 2500);
       }
     }
   } else {
@@ -3413,22 +3576,36 @@ function endGame(result) {
     msg = `${p1Label} & ${p2Label} defeated all opponents together!`;
   } else if (result === 'storycomplete') {
     const elapsed = Date.now() - storyStartTime;
+    const is2pStory = selectedMode === 'story2p';
     title = '🏆 STORY COMPLETE!';
     color = '#f39c12';
-    msg = `${p1Label}'s ${POKEMON_DATA[selectedPokemon].name} conquered all ${STORY_LEVELS.length} levels! Score: ${storyScore} | Time: ${formatTime(elapsed)} | ${storyLives} lives × 500 bonus`;
+    if (is2pStory) {
+      msg = `${p1Label}'s ${POKEMON_DATA[selectedPokemon].name} & ${p2Label}'s ${POKEMON_DATA[selectedPokemonP2].name} conquered all ${STORY_LEVELS.length} levels! Score: ${storyScore} | Time: ${formatTime(elapsed)} | ${storyLives} lives × 500 bonus`;
+    } else {
+      msg = `${p1Label}'s ${POKEMON_DATA[selectedPokemon].name} conquered all ${STORY_LEVELS.length} levels! Score: ${storyScore} | Time: ${formatTime(elapsed)} | ${storyLives} lives × 500 bonus`;
+    }
     // Save to story leaderboard
     const lb = getStoryLeaderboard();
-    lb.push({ player: p1Label, pokemon: selectedPokemon, score: storyScore, level: STORY_LEVELS.length, time: elapsed, date: Date.now() });
+    const entry = { player: p1Label, pokemon: selectedPokemon, score: storyScore, level: STORY_LEVELS.length, time: elapsed, date: Date.now() };
+    if (is2pStory) { entry.player2 = p2Label; entry.pokemon2 = selectedPokemonP2; entry.coop = true; }
+    lb.push(entry);
     saveStoryLeaderboard(lb);
     renderStoryLeaderboard();
   } else if (result === 'storyfail') {
     const elapsed = Date.now() - storyStartTime;
+    const is2pStory = selectedMode === 'story2p';
     title = '💀 GAME OVER';
     color = '#e74c3c';
-    msg = `${p1Label}'s ${POKEMON_DATA[selectedPokemon].name} fell at Level ${storyLevel}. Score: ${storyScore} | Time: ${formatTime(elapsed)}`;
+    if (is2pStory) {
+      msg = `${p1Label} & ${p2Label} fell at Level ${storyLevel}. Score: ${storyScore} | Time: ${formatTime(elapsed)}`;
+    } else {
+      msg = `${p1Label}'s ${POKEMON_DATA[selectedPokemon].name} fell at Level ${storyLevel}. Score: ${storyScore} | Time: ${formatTime(elapsed)}`;
+    }
     // Save to story leaderboard
     const lb = getStoryLeaderboard();
-    lb.push({ player: p1Label, pokemon: selectedPokemon, score: storyScore, level: storyLevel, time: elapsed, date: Date.now() });
+    const entry = { player: p1Label, pokemon: selectedPokemon, score: storyScore, level: storyLevel, time: elapsed, date: Date.now() };
+    if (is2pStory) { entry.player2 = p2Label; entry.pokemon2 = selectedPokemonP2; entry.coop = true; }
+    lb.push(entry);
     saveStoryLeaderboard(lb);
     renderStoryLeaderboard();
   } else if (result === true) {
